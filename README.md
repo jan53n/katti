@@ -1,0 +1,2 @@
+## Katti (കത്തി)
+Katti is a [parser combinator](https://en.wikipedia.org/wiki/Parser_combinator) based on PEG ([Parsing Expression Grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar)), specifically the peggyjs syntax. You combine combinator functions to make parsers, and the library provides you with the basic set of combinators. In terms of extensibility, you can use the type `Matcher` to implement your own combinator. For reference, check out the [examples/](https://github.com/jan53n/katti/examples/).
