@@ -350,7 +350,7 @@ func Pluck(matcher Matcher) Matcher {
 	}
 }
 
-// A make-believe Parse function no-one asked for
+// Parse creates new match and executes matcher(input), returns both error and the result of matcher function call
 func Parse(matcher Matcher, input string) (error, *MatchResult) {
 	match := NewMatchResult()
 	match.Rest = input
