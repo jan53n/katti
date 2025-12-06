@@ -5,72 +5,142 @@ import (
 	"testing"
 )
 
-func TestLiteral(t *testing.T) {
-	if err, result := Parse(Literal("hello"), "hello"); err != nil {
-		t.Fatal(err)
-	} else {
-		if !reflect.DeepEqual(result.Match, "hello") {
-			t.Fatalf("match result match is different")
-		}
+type testTableItem struct {
+	name    string
+	matcher Matcher
+	input   string
+	result  *MatchResult
+	err     error
+}
+
+func expectResult(t *testing.T, matcher Matcher, input string, expected MatchResult) {
+	err, r := Parse(matcher, input)
+
+	if err != nil {
+		t.Errorf("unexpected error: %#v", err)
 	}
+
+	if r.Match != expected.Match {
+		t.Errorf("expected match '%v' but got '%v'", r.Match, expected.Match)
+	}
+
+	if r.Rest != expected.Rest {
+		t.Errorf("expected rest '%v' but got '%v'", r.Rest, expected.Rest)
+	}
+
+	if expected.BindVars == nil {
+		expected.BindVars = make(map[string]string)
+	}
+
+	if !reflect.DeepEqual(r.BindVars, expected.BindVars) {
+		t.Errorf("expected bind vars %#v but got %#v", r.BindVars, expected.BindVars)
+	}
+}
+
+func runTable(t *testing.T, table []testTableItem) {
+	for _, tt := range table {
+		t.Run(tt.name, func(t *testing.T) {
+			expectResult(t, tt.matcher, tt.input, *tt.result)
+		})
+	}
+}
+
+func TestLiteral(t *testing.T) {
+	table := []testTableItem{
+		{
+			name:    "must match literal length",
+			matcher: Literal("hello"),
+			input:   "hello",
+			result: &MatchResult{
+				Match: "hello",
+			},
+		},
+		{
+			name:    "must match partial string",
+			matcher: Literal("hell"),
+			input:   "hello world",
+			result: &MatchResult{
+				Match: "hell",
+				Rest:  "o world",
+			},
+		},
+	}
+
+	runTable(t, table)
 }
 
 func TestRepeat(t *testing.T) {
-	parser := Repeat(Literal("h"), false)
-	err, r := Parse(parser, "hhhw")
-
-	if err != nil {
-		t.Errorf("%#v", err)
+	table := []testTableItem{
+		{
+			name:    "must repeat consume character",
+			matcher: Repeat(SingleChar('j'), false),
+			input:   "jjjaansen",
+			result: &MatchResult{
+				Match: "jjj",
+				Rest:  "aansen",
+			},
+		},
+		{
+			name:    "must allow empty matches when allowEmpty is true",
+			matcher: Repeat(SingleChar('h'), true),
+			input:   "w",
+			result: &MatchResult{
+				Match: "",
+				Rest:  "w",
+			},
+		},
 	}
 
-	if !reflect.DeepEqual(r.Match, "hhh") {
-		t.Fail()
-	}
-}
-
-func TestRepeatAllowEmptyMatch(t *testing.T) {
-	parser := Repeat(Literal("h"), true)
-	err, r := Parse(parser, "w")
-
-	if err != nil {
-		t.Errorf("%#v", err)
-	}
-
-	if r.Match == "" && r.Rest == "w" {
-	} else {
-		t.Fail()
-	}
+	runTable(t, table)
 }
 
 func TestNegativeAssertion(t *testing.T) {
-	parser := NegativeAssert(Literal("h"))
-	err, _ := Parse(parser, "w")
-
-	if err != nil {
-		t.Fail()
+	table := []testTableItem{
+		{
+			name:    "must not consume any characters",
+			matcher: NegativeAssert(Literal("h")),
+			input:   "world",
+			result: &MatchResult{
+				Match: "",
+				Rest:  "world",
+			},
+		},
 	}
+
+	runTable(t, table)
 }
 
-func TestCharClassSingleAZClass(t *testing.T) {
-	charClass := Char("[-a-zA-Z]")
-
-	if err, _ := Parse(charClass, "W"); err != nil {
-		t.Fatal("wrong character found")
+func TestChar(t *testing.T) {
+	table := []testTableItem{
+		{
+			name:    "must match single character from A-Z",
+			matcher: Char("[A-Z]"),
+			input:   "W",
+			result: &MatchResult{
+				Match: "W",
+			},
+		},
 	}
+
+	runTable(t, table)
 }
 
-func TestAlternationBasic(t *testing.T) {
-	alt := Alternation(
-		CharRange('a', 'a'),
-		CharRange('b', 'b'),
-		CharRange('c', 'c'),
-	)
-
-	if err, result := Parse(alt, "czz"); err != nil {
-		t.Error(err)
-	} else {
-		if result.Match != "c" || result.Rest != "zz" {
-			t.Fatal("expected 'c', '' but found", result)
-		}
+func TestAlternation(t *testing.T) {
+	table := []testTableItem{
+		{
+			name: "must match a|b|c",
+			matcher: Alternation(
+				CharRange('a', 'a'),
+				CharRange('b', 'b'),
+				CharRange('c', 'c'),
+			),
+			input: "czzzzz",
+			result: &MatchResult{
+				Match: "c",
+				Rest:  "zzzzz",
+			},
+		},
 	}
+
+	runTable(t, table)
 }
