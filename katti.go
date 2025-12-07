@@ -18,9 +18,6 @@ type MatchResult struct {
 
 func NewMatchResult() MatchResult {
 	return MatchResult{
-		Match:    "",
-		Rest:     "",
-		Pluck:    false,
 		BindVars: make(map[string]string),
 	}
 }
