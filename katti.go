@@ -27,7 +27,7 @@ func NewMatchResult() MatchResult {
 
 type Matcher = func(prev *MatchResult) error
 
-// Match exact literal string, throw error when no match
+// Literal matches if the current state input has literalString as prefix, returns error otherwise
 func Literal(literalString string) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if strings.HasPrefix(prev.Rest, literalString) {
