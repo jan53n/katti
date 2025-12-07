@@ -16,12 +16,6 @@ type MatchResult struct {
 	BindVars map[string]string
 }
 
-func NewMatchResult() MatchResult {
-	return MatchResult{
-		BindVars: make(map[string]string),
-	}
-}
-
 type Matcher = func(prev *MatchResult) error
 
 // Literal matches if the current state input has literalString as prefix, returns error otherwise
@@ -349,9 +343,12 @@ func Pluck(matcher Matcher) Matcher {
 
 // Parse creates new match and executes matcher(input), returns both error and the result of matcher function call
 func Parse(matcher Matcher, input string) (*MatchResult, error) {
-	match := NewMatchResult()
+	match := &MatchResult{
+		BindVars: make(map[string]string),
+	}
+
 	match.Rest = input
 
-	err := matcher(&match)
-	return &match, err
+	err := matcher(match)
+	return match, err
 }
