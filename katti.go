@@ -158,7 +158,7 @@ func Char(expr string) Matcher {
 		SingleChar(']'),
 	)
 
-	perr, _ := Parse(charClass, expr)
+	_, perr := Parse(charClass, expr)
 	matcher := Alternation(class.matchers...)
 
 	if class.inverted {
@@ -351,10 +351,10 @@ func Pluck(matcher Matcher) Matcher {
 }
 
 // Parse creates new match and executes matcher(input), returns both error and the result of matcher function call
-func Parse(matcher Matcher, input string) (error, *MatchResult) {
+func Parse(matcher Matcher, input string) (*MatchResult, error) {
 	match := NewMatchResult()
 	match.Rest = input
 
 	err := matcher(&match)
-	return err, &match
+	return &match, err
 }

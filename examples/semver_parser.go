@@ -93,6 +93,6 @@ func main() {
 		),
 	)
 
-	err, result := Parse(semver, "1.0.0-alpha+rr")
+	result, err := Parse(semver, "1.0.0-alpha+rr")
 	fmt.Printf("%#v, err: %#v\n", err, result)
 }

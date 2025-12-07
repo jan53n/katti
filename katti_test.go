@@ -13,11 +13,21 @@ type testTableItem struct {
 	err     error
 }
 
-func expectResult(t *testing.T, matcher Matcher, input string, expected MatchResult) {
-	err, r := Parse(matcher, input)
+func expectResult(t *testing.T, matcher Matcher, input string, expected *MatchResult, expectedErr error) {
+	r, err := Parse(matcher, input)
 
 	if err != nil {
-		t.Errorf("unexpected error: %#v", err)
+		if expectedErr != nil {
+			if expectedErr != err {
+				t.Errorf("expected err '%#v' but got '%#v'", expectedErr, err)
+			}
+		} else {
+			t.Errorf("unexpected error: %#v", err)
+		}
+	}
+
+	if expected == nil {
+		return
 	}
 
 	if r.Match != expected.Match {
@@ -40,7 +50,7 @@ func expectResult(t *testing.T, matcher Matcher, input string, expected MatchRes
 func runTable(t *testing.T, table []testTableItem) {
 	for _, tt := range table {
 		t.Run(tt.name, func(t *testing.T) {
-			expectResult(t, tt.matcher, tt.input, *tt.result)
+			expectResult(t, tt.matcher, tt.input, tt.result, tt.err)
 		})
 	}
 }
@@ -119,6 +129,12 @@ func TestChar(t *testing.T) {
 			result: &MatchResult{
 				Match: "W",
 			},
+		},
+		{
+			name:    "must not match a-zA-Z",
+			matcher: Char("[^a-zA-Z]"),
+			input:   "a",
+			err:     ErrNoMatch,
 		},
 	}
 
