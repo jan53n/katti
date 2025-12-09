@@ -18,7 +18,7 @@ type MatchResult struct {
 
 type Matcher = func(prev *MatchResult) error
 
-// Literal matches if the current state input has literalString as prefix, returns error otherwise
+// Literal matches if the current state input has literalString as prefix
 func Literal(literalString string) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if strings.HasPrefix(prev.Rest, literalString) {
@@ -32,7 +32,7 @@ func Literal(literalString string) Matcher {
 	}
 }
 
-// Match character if within start-end range, otherwise throw NO_MATCH
+// CharRange checks if input's beginning character between start and end runes (start < end)
 func CharRange(start rune, end rune) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if len(prev.Rest) == 0 {
@@ -52,11 +52,12 @@ func CharRange(start rune, end rune) Matcher {
 	}
 }
 
+// SingleChar reuses CharRange to have more readability for char ranges with same start and end
 func SingleChar(char rune) Matcher {
 	return CharRange(char, char)
 }
 
-// Wraps a matcher to print debug information about its execution.
+// Leak executes matcher and always prints the match result and error to stdin
 func Leak(matcher Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		err := matcher(prev)
@@ -65,7 +66,7 @@ func Leak(matcher Matcher) Matcher {
 	}
 }
 
-// Match one character from a character expression
+// Char matches character class expressions, very similar to peggy.js character classes
 func Char(expr string) Matcher {
 	class := struct {
 		inverted bool
@@ -254,8 +255,7 @@ func PositiveAssert(matcher Matcher) Matcher {
 
 }
 
-// No input is consumed. Try to match the expression. If the match does not succeed,
-// just return undefined and do not consume any input, otherwise consider the match failed.
+// NegativeAssert expects matcher to fail, does not consume input, will return error if matched
 func NegativeAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		t := *prev
@@ -273,7 +273,7 @@ func NegativeAssert(matcher Matcher) Matcher {
 	}
 }
 
-// Join the results to make up final result, pluck optionally
+// Sequence joins all the match from each matchers
 func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		original := *prev
@@ -310,7 +310,7 @@ func Sequence(matchers ...Matcher) Matcher {
 	}
 }
 
-// Loop until you find a match, throw error if unknown error
+// Alternation try to find a matcher which didn't fail
 func Alternation(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		for _, matcher := range matchers {
@@ -328,7 +328,12 @@ func Alternation(matchers ...Matcher) Matcher {
 	}
 }
 
-// Mark the result as plucked
+// Pluck marks a MatchResult as “plucked.”
+// When used inside a Sequence(), plucked results are given priority:
+// if any matcher in the sequence is plucked, only those plucked results
+// are returned; otherwise all results are returned.
+//
+//	Sequence(SingleChar('+'), Pluck(Literal("1")))
 func Pluck(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		err = matcher(prev)
