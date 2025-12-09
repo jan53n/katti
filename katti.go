@@ -345,9 +345,8 @@ func Pluck(matcher Matcher) Matcher {
 func Parse(matcher Matcher, input string) (*MatchResult, error) {
 	match := &MatchResult{
 		BindVars: make(map[string]string),
+		Rest:     input,
 	}
-
-	match.Rest = input
 
 	err := matcher(match)
 	return match, err
