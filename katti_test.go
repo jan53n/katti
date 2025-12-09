@@ -31,11 +31,11 @@ func expectResult(t *testing.T, matcher Matcher, input string, expected *MatchRe
 	}
 
 	if r.Match != expected.Match {
-		t.Errorf("expected match '%v' but got '%v'", r.Match, expected.Match)
+		t.Errorf("expected match '%v' but got '%v'", expected.Match, r.Match)
 	}
 
 	if r.Rest != expected.Rest {
-		t.Errorf("expected rest '%v' but got '%v'", r.Rest, expected.Rest)
+		t.Errorf("expected rest '%v' but got '%v'", expected.Rest, r.Rest)
 	}
 
 	if expected.BindVars == nil {
