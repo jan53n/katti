@@ -238,7 +238,7 @@ func Bind(variable string, matcher Matcher) Matcher {
 	}
 }
 
-// Match empty if matched otherwise throw error
+// NegativeAssert will not consume input if matched
 func PositiveAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		tempMatch := *prev
