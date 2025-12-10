@@ -1,8 +1,10 @@
-package katti
+package katti_test
 
 import (
 	"reflect"
 	"testing"
+
+	. "jnsn.in/katti"
 )
 
 type testTableItem struct {
