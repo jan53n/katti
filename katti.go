@@ -71,19 +71,27 @@ func Char(expr string) Matcher {
 	class := struct {
 		inverted bool
 
-		// not implemented
-		case_insensitive bool
-
 		matchers []Matcher
 	}{
-		inverted:         false,
-		case_insensitive: false,
-		matchers:         []Matcher{},
+		inverted: false,
+		matchers: []Matcher{},
 	}
 
-	lcChar := CharRange('a', 'z')
-	ucChar := CharRange('A', 'Z')
-	nChar := CharRange('0', '9')
+	specialChar := Alternation(
+		SingleChar('['),
+		SingleChar(']'),
+		SingleChar('-'),
+		SingleChar('^'),
+	)
+
+	escapedSpecialChar := Sequence(SingleChar('\\'), Pluck(specialChar))
+
+	nonSpecialChar := Sequence(NegativeAssert(specialChar), AnyChar)
+
+	rangeChar := Alternation(
+		escapedSpecialChar,
+		nonSpecialChar,
+	)
 
 	setGroups := func(result *MatchResult) error {
 		if _, ok := result.BindVars["invert"]; ok {
@@ -127,21 +135,11 @@ func Char(expr string) Matcher {
 			Action(
 				Alternation(
 					Sequence(
-						Bind("char_range_start", lcChar),
+						Bind("char_range_start", rangeChar),
 						classSeperator,
-						Bind("char_range_end", lcChar),
+						Bind("char_range_end", rangeChar),
 					),
-					Sequence(
-						Bind("char_range_start", ucChar),
-						classSeperator,
-						Bind("char_range_end", ucChar),
-					),
-					Sequence(
-						Bind("char_range_start", nChar),
-						classSeperator,
-						Bind("char_range_end", nChar),
-					),
-					Bind("single_char", Alternation(lcChar, ucChar, nChar, classSeperator)),
+					Bind("single_char", rangeChar),
 				),
 				setGroups,
 			),

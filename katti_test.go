@@ -22,7 +22,7 @@ func expectResult(t *testing.T, matcher Matcher, input string, expected *MatchRe
 				t.Errorf("expected err '%#v' but got '%#v'", expectedErr, err)
 			}
 		} else {
-			t.Errorf("unexpected error: %#v", err)
+			t.Fatalf("unexpected error: %#v", err)
 		}
 	}
 
@@ -135,6 +135,14 @@ func TestChar(t *testing.T) {
 			matcher: Char("[^a-zA-Z]"),
 			input:   "a",
 			err:     ErrNoMatch,
+		},
+		{
+			name:    "supports escaped characters",
+			matcher: Repeat(Char("[\\[\\]\\-]"), false),
+			input:   "-[]",
+			result: &MatchResult{
+				Match: "-[]",
+			},
 		},
 	}
 
