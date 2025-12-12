@@ -32,8 +32,8 @@ func Literal(literalString string) Matcher {
 	}
 }
 
-// CharRange checks if input's beginning character between start and end runes (start < end)
-func CharRange(start rune, end rune) Matcher {
+// CharIn checks if input's beginning character between start and end runes (start < end)
+func CharIn(start rune, end rune) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if len(prev.Rest) == 0 {
 			return ErrNoMatch
@@ -54,7 +54,7 @@ func CharRange(start rune, end rune) Matcher {
 
 // SingleChar reuses CharRange to have more readability for char ranges with same start and end
 func SingleChar(char rune) Matcher {
-	return CharRange(char, char)
+	return CharIn(char, char)
 }
 
 // Leak executes matcher and always prints the match result and error to stdin
@@ -66,16 +66,16 @@ func Leak(matcher Matcher) Matcher {
 	}
 }
 
-type Group struct {
-	Start rune
-	End   rune
+type CharRange struct {
+	Start, End rune
 }
 
-func Char2(groups []Group, inverse bool) Matcher {
+// Char matches multiple char ranges, optionally inversed
+func Char(groups []CharRange, inverse bool) Matcher {
 	ranges := []Matcher{}
 
 	for _, group := range groups {
-		ranges = append(ranges, CharRange(group.Start, group.End))
+		ranges = append(ranges, CharIn(group.Start, group.End))
 	}
 
 	matcher := Alternation(ranges...)
@@ -89,108 +89,8 @@ func Char2(groups []Group, inverse bool) Matcher {
 	}
 }
 
-// Char matches character class expressions, very similar to peggy.js character classes
-func Char(expr string) Matcher {
-	class := struct {
-		inverted bool
-
-		matchers []Matcher
-	}{
-		inverted: false,
-		matchers: []Matcher{},
-	}
-
-	specialChar := Alternation(
-		SingleChar('['),
-		SingleChar(']'),
-		SingleChar('-'),
-		SingleChar('^'),
-	)
-
-	escapedSpecialChar := Sequence(SingleChar('\\'), Pluck(specialChar))
-
-	nonSpecialChar := Sequence(NegativeAssert(specialChar), AnyChar)
-
-	rangeChar := Alternation(
-		escapedSpecialChar,
-		nonSpecialChar,
-	)
-
-	setGroups := func(result *MatchResult) error {
-		if _, ok := result.BindVars["invert"]; ok {
-			class.inverted = true
-		}
-
-		if single_char, ok := result.BindVars["single_char"]; ok {
-			sr, _ := utf8.DecodeRuneInString(single_char)
-
-			if sr == utf8.RuneError {
-				return fmt.Errorf("failed to match rune")
-			}
-
-			class.matchers = append(class.matchers, CharRange(sr, sr))
-		}
-
-		if char_start, startOk := result.BindVars["char_range_start"]; startOk {
-			if char_end, endOk := result.BindVars["char_range_end"]; endOk {
-				sr, _ := utf8.DecodeRuneInString(char_start)
-				er, _ := utf8.DecodeRuneInString(char_end)
-
-				if sr == utf8.RuneError || er == utf8.RuneError {
-					return fmt.Errorf("failed to match rune")
-				}
-
-				class.matchers = append(class.matchers, CharRange(sr, er))
-			}
-		}
-
-		return nil
-	}
-
-	classSeperator := SingleChar('-')
-
-	charClass := Sequence(
-		SingleChar('['),
-		Optional(
-			Bind("invert", SingleChar('^')),
-		),
-		Repeat(
-			Action(
-				Alternation(
-					Sequence(
-						Bind("char_range_start", rangeChar),
-						classSeperator,
-						Bind("char_range_end", rangeChar),
-					),
-					Bind("single_char", rangeChar),
-				),
-				setGroups,
-			),
-			false,
-		),
-		SingleChar(']'),
-	)
-
-	_, perr := Parse(charClass, expr)
-	matcher := Alternation(class.matchers...)
-
-	if class.inverted {
-		matcher = NegativeAssert(matcher)
-	}
-
-	return func(prev *MatchResult) (err error) {
-		if perr != nil {
-			return perr
-		} else {
-			err = matcher(prev)
-		}
-
-		return err
-	}
-}
-
 var EndOfInput = NegativeAssert(AnyChar)
-var AnyChar = CharRange(0, '\uFFFF')
+var AnyChar = CharIn(0, '\uFFFF')
 
 // Act on the match result, reset bind vars, return the result
 func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {

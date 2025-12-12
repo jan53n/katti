@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	positiveDigit := CharRange('1', '9')
-	digit := CharRange('0', '9')
+	positiveDigit := CharIn('1', '9')
+	digit := CharIn('0', '9')
 	dot := SingleChar('.')
 
 	numericIdentifier := Alternation(
@@ -19,9 +19,24 @@ func main() {
 		),
 	)
 
-	nonDigit := Char("[a-zA-Z-]")
+	nonDigit := Char(
+		[]CharRange{
+			{Start: 'a', End: 'z'},
+			{Start: 'A', End: 'Z'},
+			{Start: '-', End: '-'},
+		},
+		false,
+	)
 
-	identifierChar := Char("[a-zA-Z0-9-]")
+	identifierChar := Char(
+		[]CharRange{
+			{Start: 'a', End: 'z'},
+			{Start: 'A', End: 'Z'},
+			{Start: '0', End: '9'},
+			{Start: '-', End: '-'},
+		},
+		false,
+	)
 
 	alphanumericIdentifier := Sequence(
 		Repeat(digit, true),

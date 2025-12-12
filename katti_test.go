@@ -125,26 +125,29 @@ func TestNegativeAssertion(t *testing.T) {
 func TestChar(t *testing.T) {
 	table := []testTableItem{
 		{
-			name:    "must match single character from A-Z",
-			matcher: Char("[A-Z]"),
-			input:   "W",
+			name: "must match single character from A-Z",
+			matcher: Char(
+				[]CharRange{
+					{Start: 'A', End: 'Z'},
+				},
+				false,
+			),
+			input: "W",
 			result: &MatchResult{
 				Match: "W",
 			},
 		},
 		{
-			name:    "must not match a-zA-Z",
-			matcher: Char("[^a-zA-Z]"),
-			input:   "a",
-			err:     ErrNoMatch,
-		},
-		{
-			name:    "supports escaped characters",
-			matcher: Repeat(Char("[\\[\\]\\-]"), false),
-			input:   "-[]",
-			result: &MatchResult{
-				Match: "-[]",
-			},
+			name: "must not match a-zA-Z",
+			matcher: Char(
+				[]CharRange{
+					{Start: 'a', End: 'z'},
+					{Start: 'A', End: 'Z'},
+				},
+				true,
+			),
+			input: "a",
+			err:   ErrNoMatch,
 		},
 	}
 
@@ -156,9 +159,9 @@ func TestAlternation(t *testing.T) {
 		{
 			name: "must match a|b|c",
 			matcher: Alternation(
-				CharRange('a', 'a'),
-				CharRange('b', 'b'),
-				CharRange('c', 'c'),
+				CharIn('a', 'a'),
+				CharIn('b', 'b'),
+				CharIn('c', 'c'),
 			),
 			input: "czzzzz",
 			result: &MatchResult{
