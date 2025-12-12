@@ -66,6 +66,29 @@ func Leak(matcher Matcher) Matcher {
 	}
 }
 
+type Group struct {
+	Start rune
+	End   rune
+}
+
+func Char2(groups []Group, inverse bool) Matcher {
+	ranges := []Matcher{}
+
+	for _, group := range groups {
+		ranges = append(ranges, CharRange(group.Start, group.End))
+	}
+
+	matcher := Alternation(ranges...)
+
+	if inverse {
+		matcher = NegativeAssert(matcher)
+	}
+
+	return func(prev *MatchResult) (err error) {
+		return matcher(prev)
+	}
+}
+
 // Char matches character class expressions, very similar to peggy.js character classes
 func Char(expr string) Matcher {
 	class := struct {
