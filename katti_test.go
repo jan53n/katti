@@ -141,3 +141,36 @@ func TestAlternation(t *testing.T) {
 
 	runTable(t, table)
 }
+
+func TestSequence(t *testing.T) {
+	table := []testTableItem{
+		{
+			name: "must match abc",
+			matcher: Sequence(
+				Char('a'),
+				Char('b'),
+				Char('c'),
+			),
+			input: "abcd",
+			result: &MatchResult{
+				Match: "abc",
+				Rest:  "d",
+			},
+		},
+		{
+			name: "must drop non pluck matchers",
+			matcher: Sequence(
+				Char('a'),
+				Pluck(Char('b')),
+				Char('c'),
+			),
+			input: "abcd",
+			result: &MatchResult{
+				Match: "b",
+				Rest:  "d",
+			},
+		},
+	}
+
+	runTable(t, table)
+}

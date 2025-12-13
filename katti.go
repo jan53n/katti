@@ -176,7 +176,7 @@ func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		original := *prev
 		var acc strings.Builder
-		returnMode := false
+		pluckMode := false
 
 		for _, m := range matchers {
 			prev.Match = ""
@@ -186,14 +186,15 @@ func Sequence(matchers ...Matcher) Matcher {
 				return err
 			}
 
-			if !returnMode && prev.Pluck {
+			if !pluckMode && prev.Pluck {
 				acc.Reset()
-				returnMode = true
+				pluckMode = true
 			}
 
-			if returnMode {
+			if pluckMode {
 				if prev.Pluck {
 					acc.WriteString(prev.Match)
+					prev.Pluck = false
 				}
 
 				continue
