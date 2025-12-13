@@ -238,8 +238,6 @@ func Alternation(matchers ...Matcher) Matcher {
 			err = matcher(prev)
 			if err == ErrNoMatch {
 				continue
-			} else if err == nil {
-				break
 			} else {
 				break
 			}
