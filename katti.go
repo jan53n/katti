@@ -18,7 +18,7 @@ type MatchResult struct {
 
 type Matcher = func(prev *MatchResult) error
 
-// Literal matches if the current state input has literalString as prefix
+// Literal matches if the current input has literalString as a prefix.
 func Literal(literalString string) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if strings.HasPrefix(prev.Rest, literalString) {
@@ -32,7 +32,7 @@ func Literal(literalString string) Matcher {
 	}
 }
 
-// CharIn checks if input's beginning character between start and end runes (start < end)
+// CharIn checks whether the first rune of the input lies between start and end (inclusive).
 func CharIn(start rune, end rune) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if len(prev.Rest) == 0 {
@@ -52,12 +52,12 @@ func CharIn(start rune, end rune) Matcher {
 	}
 }
 
-// Char reuses CharRange to have more readability for char ranges with same start and end
+// Char is a convenience wrapper over CharIn for matching a single rune.
 func Char(char rune) Matcher {
 	return CharIn(char, char)
 }
 
-// Leak executes matcher and always prints the match result and error to stdin
+// Leak executes the matcher and always prints the match result and error to standard output.
 func Leak(matcher Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		err := matcher(prev)
@@ -69,7 +69,8 @@ func Leak(matcher Matcher) Matcher {
 var EndOfInput = NegativeAssert(AnyChar)
 var AnyChar = CharIn(0, '\uFFFF')
 
-// Act on the match result, reset bind vars, return the result
+// Action executes the matcher, then invokes a callback on the resulting MatchResult.
+// Bound variables are reset after the callback.
 func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 	return func(prev *MatchResult) (err error) {
 		err = matcher(prev)
@@ -85,7 +86,8 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 	}
 }
 
-// Repeat until NO_MATCH is thrown
+// Repeat repeatedly applies the matcher until ErrNoMatch is returned.
+// If allowEmpty is false, at least one successful match is required.
 func Repeat(matcher Matcher, allowEmpty bool) Matcher {
 	return func(prev *MatchResult) (err error) {
 		var acc strings.Builder
@@ -113,7 +115,7 @@ func Repeat(matcher Matcher, allowEmpty bool) Matcher {
 	}
 }
 
-// Try to match, otherwise silence errors
+// Optional attempts to apply the matcher; if it fails, the error is suppressed and no input is consumed.
 func Optional(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		err = matcher(prev)
@@ -126,7 +128,7 @@ func Optional(matcher Matcher) Matcher {
 	}
 }
 
-// Bind Match string to a variable
+// Binds the matched string to a named variable.
 func Bind(variable string, matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		err = matcher(prev)
@@ -138,7 +140,7 @@ func Bind(variable string, matcher Matcher) Matcher {
 	}
 }
 
-// NegativeAssert will not consume input if matched
+// PositiveAssert succeeds only if the matcher succeeds and does not consume input.
 func PositiveAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		tempMatch := *prev
@@ -153,7 +155,7 @@ func PositiveAssert(matcher Matcher) Matcher {
 
 }
 
-// NegativeAssert expects matcher to fail, does not consume input, will return error if matched
+// NegativeAssert succeeds only if the matcher fails. It does not consume input and returns an error if the matcher succeeds.
 func NegativeAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		t := *prev
@@ -171,7 +173,9 @@ func NegativeAssert(matcher Matcher) Matcher {
 	}
 }
 
-// Sequence joins all the match from each matchers
+// Sequence applies matchers in order and concatenates their matches.
+// If any matcher produces a result with Pluck set to true, only plucked
+// results are collected and all previously matched results are discarded.
 func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		original := *prev
@@ -209,7 +213,7 @@ func Sequence(matchers ...Matcher) Matcher {
 	}
 }
 
-// Alternation try to find a matcher which didn't fail
+// Alternation tries each matcher in order and returns the first one that does not fail.
 func Alternation(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		for _, matcher := range matchers {
@@ -225,12 +229,7 @@ func Alternation(matchers ...Matcher) Matcher {
 	}
 }
 
-// Pluck marks a MatchResult as “plucked.”
-// When used inside a Sequence(), plucked results are given priority:
-// if any matcher in the sequence is plucked, only those plucked results
-// are returned; otherwise all results are returned.
-//
-//	Sequence(SingleChar('+'), Pluck(Literal("1")))
+// Pluck marks a MatchResult as plucked.
 func Pluck(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		err = matcher(prev)
@@ -243,7 +242,7 @@ func Pluck(matcher Matcher) Matcher {
 	}
 }
 
-// Parse creates new match and executes matcher(input), returns both error and the result of matcher function call
+// Parse creates a new MatchResult, executes the matcher, and returns both the resulting MatchResult and any error.
 func Parse(matcher Matcher, input string) (*MatchResult, error) {
 	match := &MatchResult{
 		BindVars: make(map[string]string),

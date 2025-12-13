@@ -5,3 +5,6 @@ test:
 
 bench:
 	go test -bench=. | tee BENCHMARK
+
+doc:
+	go doc -http

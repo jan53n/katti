@@ -1,2 +1,6 @@
 ## Katti (കത്തി)
-Katti is a [parser combinator](https://en.wikipedia.org/wiki/Parser_combinator) based on PEG ([Parsing Expression Grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar)), specifically the peggyjs syntax. You combine combinator functions to make parsers, and the library provides you with the basic set of combinators. In terms of extensibility, you can use the type `Matcher` to implement your own combinator. For reference, check out the [examples/](https://github.com/jan53n/katti/examples/).
+Katti is a PEG-inspired parser combinator library for Go. Parsers are constructed by composing matcher functions rather than writing a grammar DSL. The library provides a small set of core combinators, and additional combinators can be implemented by defining the `Matcher` type.
+
+Parsing is driven by error signaling: a matcher either consumes input by mutating a `MatchResult` or fails by returning `ErrNoMatch`. Input consumption is explicit through the `Match` and `Rest` fields of `MatchResult`.
+
+For practical examples and usage patterns, check out the [examples/](examples/) directory in this repository.
