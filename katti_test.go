@@ -85,7 +85,7 @@ func TestRepeat(t *testing.T) {
 	table := []testTableItem{
 		{
 			name:    "must repeat consume character",
-			matcher: Repeat(SingleChar('j'), false),
+			matcher: Repeat(Char('j'), false),
 			input:   "jjjaansen",
 			result: &MatchResult{
 				Match: "jjj",
@@ -94,7 +94,7 @@ func TestRepeat(t *testing.T) {
 		},
 		{
 			name:    "must allow empty matches when allowEmpty is true",
-			matcher: Repeat(SingleChar('h'), true),
+			matcher: Repeat(Char('h'), true),
 			input:   "w",
 			result: &MatchResult{
 				Match: "",
@@ -116,38 +116,6 @@ func TestNegativeAssertion(t *testing.T) {
 				Match: "",
 				Rest:  "world",
 			},
-		},
-	}
-
-	runTable(t, table)
-}
-
-func TestChar(t *testing.T) {
-	table := []testTableItem{
-		{
-			name: "must match single character from A-Z",
-			matcher: Char(
-				[]CharRange{
-					{Start: 'A', End: 'Z'},
-				},
-				false,
-			),
-			input: "W",
-			result: &MatchResult{
-				Match: "W",
-			},
-		},
-		{
-			name: "must not match a-zA-Z",
-			matcher: Char(
-				[]CharRange{
-					{Start: 'a', End: 'z'},
-					{Start: 'A', End: 'Z'},
-				},
-				true,
-			),
-			input: "a",
-			err:   ErrNoMatch,
 		},
 	}
 

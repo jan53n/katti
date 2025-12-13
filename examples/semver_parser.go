@@ -9,33 +9,27 @@ import (
 func main() {
 	positiveDigit := CharIn('1', '9')
 	digit := CharIn('0', '9')
-	dot := SingleChar('.')
+	dot := Char('.')
 
 	numericIdentifier := Alternation(
-		SingleChar('0'),
+		Char('0'),
 		Sequence(
 			positiveDigit,
 			Repeat(digit, true),
 		),
 	)
 
-	nonDigit := Char(
-		[]CharRange{
-			{Start: 'a', End: 'z'},
-			{Start: 'A', End: 'Z'},
-			{Start: '-', End: '-'},
-		},
-		false,
+	nonDigit := Alternation(
+		CharIn('a', 'z'),
+		CharIn('A', 'Z'),
+		CharIn('0', '9'),
 	)
 
-	identifierChar := Char(
-		[]CharRange{
-			{Start: 'a', End: 'z'},
-			{Start: 'A', End: 'Z'},
-			{Start: '0', End: '9'},
-			{Start: '-', End: '-'},
-		},
-		false,
+	identifierChar := Alternation(
+		CharIn('a', 'z'),
+		CharIn('A', 'Z'),
+		CharIn('0', '9'),
+		CharIn('-', '-'),
 	)
 
 	alphanumericIdentifier := Sequence(
@@ -93,7 +87,7 @@ func main() {
 		Bind("pre",
 			Optional(
 				Sequence(
-					SingleChar('-'),
+					Char('-'),
 					Pluck(preRelease),
 				),
 			),
@@ -101,7 +95,7 @@ func main() {
 		Bind("build",
 			Optional(
 				Sequence(
-					SingleChar('+'),
+					Char('+'),
 					Pluck(build),
 				),
 			),

@@ -52,8 +52,8 @@ func CharIn(start rune, end rune) Matcher {
 	}
 }
 
-// SingleChar reuses CharRange to have more readability for char ranges with same start and end
-func SingleChar(char rune) Matcher {
+// Char reuses CharRange to have more readability for char ranges with same start and end
+func Char(char rune) Matcher {
 	return CharIn(char, char)
 }
 
@@ -63,29 +63,6 @@ func Leak(matcher Matcher) Matcher {
 		err := matcher(prev)
 		fmt.Printf("(L) %#v (%#v)\n", prev, err)
 		return err
-	}
-}
-
-type CharRange struct {
-	Start, End rune
-}
-
-// Char matches multiple char ranges, optionally inversed
-func Char(groups []CharRange, inverse bool) Matcher {
-	ranges := []Matcher{}
-
-	for _, group := range groups {
-		ranges = append(ranges, CharIn(group.Start, group.End))
-	}
-
-	matcher := Alternation(ranges...)
-
-	if inverse {
-		matcher = NegativeAssert(matcher)
-	}
-
-	return func(prev *MatchResult) (err error) {
-		return matcher(prev)
 	}
 }
 
