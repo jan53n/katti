@@ -1,7 +1,7 @@
 .PHONY: test bench
 
 test:
-	go test .
+	go test . -v
 
 bench:
 	go test -bench=. | tee BENCHMARK
