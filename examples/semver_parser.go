@@ -29,7 +29,7 @@ func main() {
 		CharIn('a', 'z'),
 		CharIn('A', 'Z'),
 		CharIn('0', '9'),
-		CharIn('-', '-'),
+		Char('-'),
 	)
 
 	alphanumericIdentifier := Sequence(
