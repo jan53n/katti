@@ -179,14 +179,12 @@ func PositiveAssert(matcher Matcher) Matcher {
 // NegativeAssert succeeds only if the matcher fails. It does not consume input and returns an error if the matcher succeeds.
 func NegativeAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
-		t := *prev
 		matchErr := matcher(prev)
 
 		switch matchErr {
 		case nil:
 			return ErrNoMatch
 		case ErrNoMatch:
-			*prev = t
 			return nil
 		default:
 			return matchErr
@@ -199,7 +197,6 @@ func NegativeAssert(matcher Matcher) Matcher {
 // results are collected and all previously matched results are discarded.
 func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
-		original := *prev
 		var acc strings.Builder
 		pluckMode := false
 
@@ -207,7 +204,6 @@ func Sequence(matchers ...Matcher) Matcher {
 			prev.Match = ""
 
 			if err := m(prev); err != nil {
-				*prev = original
 				return err
 			}
 
