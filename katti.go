@@ -179,12 +179,14 @@ func PositiveAssert(matcher Matcher) Matcher {
 // NegativeAssert succeeds only if the matcher fails. It does not consume input and returns an error if the matcher succeeds.
 func NegativeAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
+		t := *prev
 		matchErr := matcher(prev)
 
 		switch matchErr {
 		case nil:
 			return ErrNoMatch
 		case ErrNoMatch:
+			*prev = t
 			return nil
 		default:
 			return matchErr
