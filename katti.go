@@ -93,11 +93,9 @@ func RepeatRange(matcher Matcher, min, max int) Matcher {
 
 	return func(prev *MatchResult) (err error) {
 		var acc strings.Builder
-		var original MatchResult
 		matchCount := 0
 
 		for len(prev.Rest) > 0 {
-			original = *prev
 			if hasUpper && matchCount == max {
 				break
 			}
@@ -106,7 +104,7 @@ func RepeatRange(matcher Matcher, min, max int) Matcher {
 			err = matcher(prev)
 
 			if err == ErrNoMatch {
-				*prev = original
+				// *prev = original
 				break
 			} else if err != nil {
 				return err
