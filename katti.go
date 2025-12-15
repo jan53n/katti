@@ -86,20 +86,27 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 	}
 }
 
-// Repeat repeatedly applies the matcher until ErrNoMatch is returned.
-// If allowEmpty is false, at least one successful match is required.
-func Repeat(matcher Matcher, allowEmpty bool) Matcher {
+// RepeatRange applies the matcher repeatedly, requiring the number of matches to fall within the given bounds.
+func RepeatRange(matcher Matcher, min, max int) Matcher {
+	hasUpper := max != -1
+	hasLower := min != -1
+
 	return func(prev *MatchResult) (err error) {
 		var acc strings.Builder
+		var original MatchResult
+		matchCount := 0
 
 		for len(prev.Rest) > 0 {
+			original = *prev
+			if hasUpper && matchCount == max {
+				break
+			}
+
 			prev.Match = ""
 			err = matcher(prev)
 
 			if err == ErrNoMatch {
-				if allowEmpty {
-					err = nil
-				}
+				*prev = original
 				break
 			} else if err != nil {
 				return err
@@ -108,11 +115,27 @@ func Repeat(matcher Matcher, allowEmpty bool) Matcher {
 			if _, err = acc.WriteString(prev.Match); err != nil {
 				return err
 			}
+
+			matchCount++
+		}
+
+		if hasLower && matchCount < min {
+			return ErrNoMatch
 		}
 
 		prev.Match = acc.String()
 		return nil
 	}
+}
+
+// Repeat repeatedly applies the matcher until ErrNoMatch is returned.
+// If allowEmpty is false, at least one successful match is required.
+func Repeat(matcher Matcher, allowEmpty bool) Matcher {
+	if allowEmpty {
+		return RepeatRange(matcher, 0, -1)
+	}
+
+	return RepeatRange(matcher, 1, -1)
 }
 
 // Optional attempts to apply the matcher; if it fails, the error is suppressed and no input is consumed.

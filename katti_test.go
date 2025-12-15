@@ -18,6 +18,10 @@ type testTableItem struct {
 func expectResult(t *testing.T, matcher Matcher, input string, expected *MatchResult, expectedErr error) {
 	r, err := Parse(matcher, input)
 
+	if expectedErr == nil && expected == nil {
+		t.Fatalf("no assertions!")
+	}
+
 	if err != nil {
 		if expectedErr != nil {
 			if expectedErr != err {
@@ -99,6 +103,115 @@ func TestRepeat(t *testing.T) {
 			result: &MatchResult{
 				Match: "",
 				Rest:  "w",
+			},
+		},
+	}
+
+	runTable(t, table)
+}
+
+func TestRepeatRange(t *testing.T) {
+	table := []testTableItem{
+		{
+			name:    "min=0 max=3 | too many matches causes failure",
+			matcher: RepeatRange(Char('j'), 0, 3),
+			input:   "jjaaansen",
+			err:     ErrNoMatch,
+		},
+		{
+			name:    "min=0 max=3 | exact max matches succeeds",
+			matcher: RepeatRange(Char('j'), 0, 3),
+			input:   "jjjansen",
+			result: &MatchResult{
+				Match: "jjj",
+				Rest:  "ansen",
+			},
+		},
+		{
+			name:    "min=0 max=3 | fewer than max matches succeeds",
+			matcher: RepeatRange(Char('j'), 0, 3),
+			input:   "jansen",
+			result: &MatchResult{
+				Match: "j",
+				Rest:  "ansen",
+			},
+		},
+		{
+			name:    "min=1 max=3 | zero matches fails",
+			matcher: RepeatRange(Char('j'), 1, 3),
+			input:   "ansen",
+			err:     ErrNoMatch,
+		},
+		{
+			name:    "min=1 max=3 | one match succeeds",
+			matcher: RepeatRange(Char('j'), 1, 3),
+			input:   "jansen",
+			result: &MatchResult{
+				Match: "j",
+				Rest:  "ansen",
+			},
+		},
+		{
+			name:    "min=2 max=3 | one match fails",
+			matcher: RepeatRange(Char('j'), 2, 3),
+			input:   "jansen",
+			err:     ErrNoMatch,
+		},
+		{
+			name:    "min=2 max=3 | two matches succeeds",
+			matcher: RepeatRange(Char('j'), 2, 3),
+			input:   "jjansen",
+			result: &MatchResult{
+				Match: "jj",
+				Rest:  "ansen",
+			},
+		},
+		{
+			name:    "min=2 max=2 | exact match succeeds",
+			matcher: RepeatRange(Char('j'), 2, 2),
+			input:   "jjansen",
+			result: &MatchResult{
+				Match: "jj",
+				Rest:  "ansen",
+			},
+		},
+		{
+			name:    "min=2 max=2 | overflow fails",
+			matcher: RepeatRange(Char('j'), 2, 2),
+			input:   "jjjansen",
+			err:     ErrNoMatch,
+		},
+		{
+			name:    "min=0 max=0 | zero-width succeeds",
+			matcher: RepeatRange(Char('j'), 0, 0),
+			input:   "jansen",
+			result: &MatchResult{
+				Match: "",
+				Rest:  "jansen",
+			},
+		},
+		{
+			name:    "min=1 max=-1 | unbounded upper, enough matches",
+			matcher: RepeatRange(Char('j'), 1, -1),
+			input:   "jjjjansen",
+			result: &MatchResult{
+				Match: "jjjj",
+				Rest:  "ansen",
+			},
+		},
+		{
+			name:    "min=1 max=-1 | unbounded upper, zero matches fails",
+			matcher: RepeatRange(Char('j'), 1, -1),
+			input:   "ansen",
+			err:     ErrNoMatch,
+		},
+		{
+			name:    "min=0 max=-1 | fully unbounded behaves like Repeat allowEmpty",
+			matcher: RepeatRange(Char('j'), 0, -1),
+			input:   "jjjansen",
+			result: &MatchResult{
+				Match: "jjj",
+				Rest:  "ansen",
 			},
 		},
 	}
