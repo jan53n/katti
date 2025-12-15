@@ -184,6 +184,7 @@ func NegativeAssert(matcher Matcher) Matcher {
 
 		switch matchErr {
 		case nil:
+			*prev = t
 			return ErrNoMatch
 		case ErrNoMatch:
 			*prev = t
