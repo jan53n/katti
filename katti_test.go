@@ -287,3 +287,38 @@ func TestSequence(t *testing.T) {
 
 	runTable(t, table)
 }
+
+func TestRef(t *testing.T) {
+	var expr Matcher
+
+	atom := Literal("a")
+
+	list := Sequence(
+		Char('('),
+		Optional(Ref(&expr)),
+		Char(')'),
+	)
+
+	expr = Alternation(atom, list)
+
+	if _, err := Parse(expr, "(a)"); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestRefCrossSingle(t *testing.T) {
+	var even, odd Matcher
+
+	number := Literal("1")
+
+	even = Sequence(number, Optional(Ref(&odd)))
+
+	odd = Sequence(Optional(Ref(&even)), number)
+
+	// parse a simple alternating sequence
+	input := "111" // even -> odd -> even
+	_, err := Parse(even, input)
+	if err != nil {
+		t.Errorf("failed to parse cross-recursive input %q: %v", input, err)
+	}
+}

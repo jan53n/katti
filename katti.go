@@ -18,6 +18,16 @@ type MatchResult struct {
 
 type Matcher = func(prev *MatchResult) error
 
+func Ref(m *Matcher) Matcher {
+	return func(prev *MatchResult) error {
+		if *m == nil {
+			panic("Ref: uninitialized matcher")
+		}
+
+		return (*m)(prev)
+	}
+}
+
 // Literal matches if the current input has literalString as a prefix.
 func Literal(literalString string) Matcher {
 	return func(prev *MatchResult) (err error) {
