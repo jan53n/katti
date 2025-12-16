@@ -63,8 +63,27 @@ func CharIn(start rune, end rune) Matcher {
 }
 
 // Char is a convenience wrapper over CharIn for matching a single rune.
-func Char(char rune) Matcher {
-	return CharIn(char, char)
+func Char(char ...rune) Matcher {
+	return func(prev *MatchResult) (err error) {
+		if len(prev.Rest) == 0 {
+			return ErrNoMatch
+		}
+
+		r, size := utf8.DecodeRuneInString(prev.Rest)
+
+		for _, c := range char {
+
+			if r == c {
+				prev.Match = prev.Rest[:size]
+				prev.Rest = prev.Rest[size:]
+				return nil
+			} else {
+				return ErrNoMatch
+			}
+		}
+
+		return nil
+	}
 }
 
 // Leak executes the matcher and always prints the match result and error to standard output.
