@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"slices"
 	"strings"
 	"unicode/utf8"
 )
@@ -78,13 +79,10 @@ func Char(char ...rune) Matcher {
 
 		r, size := utf8.DecodeRuneInString(prev.Rest)
 
-		for _, c := range char {
-
-			if r == c {
-				prev.Match = prev.Rest[:size]
-				prev.Rest = prev.Rest[size:]
-				return nil
-			}
+		if slices.Contains(char, r) {
+			prev.Match = prev.Rest[:size]
+			prev.Rest = prev.Rest[size:]
+			return nil
 		}
 
 		return ErrNoMatch
