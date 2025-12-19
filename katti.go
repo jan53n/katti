@@ -135,7 +135,6 @@ func RepeatRange(matcher Matcher, min, max int) Matcher {
 			err = matcher(prev)
 
 			if err == ErrNoMatch {
-				// *prev = original
 				break
 			} else if err != nil {
 				return err
