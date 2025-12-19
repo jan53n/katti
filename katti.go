@@ -98,8 +98,8 @@ func Leak(matcher Matcher) Matcher {
 	}
 }
 
-var EndOfInput = NegativeAssert(AnyChar)
 var AnyChar = CharIn(0, utf8.MaxRune)
+var EndOfInput = NegativeAssert(AnyChar)
 
 // Action executes the matcher, then invokes a callback on the resulting MatchResult.
 func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
