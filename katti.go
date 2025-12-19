@@ -3,6 +3,7 @@ package katti
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"strings"
 	"unicode/utf8"
 )
@@ -17,6 +18,12 @@ type MatchResult struct {
 }
 
 type Matcher = func(prev *MatchResult) error
+
+func snapshot(result *MatchResult) MatchResult {
+	newResult := *result
+	newResult.BindVars = maps.Clone(newResult.BindVars)
+	return newResult
+}
 
 func Ref(m *Matcher) Matcher {
 	return func(prev *MatchResult) error {
@@ -77,12 +84,10 @@ func Char(char ...rune) Matcher {
 				prev.Match = prev.Rest[:size]
 				prev.Rest = prev.Rest[size:]
 				return nil
-			} else {
-				return ErrNoMatch
 			}
 		}
 
-		return nil
+		return ErrNoMatch
 	}
 }
 
@@ -190,11 +195,11 @@ func Bind(variable string, matcher Matcher) Matcher {
 // PositiveAssert succeeds only if the matcher succeeds and does not consume input.
 func PositiveAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
-		tempMatch := *prev
+		t := snapshot(prev)
 		err = matcher(prev)
 
 		if err == nil {
-			*prev = tempMatch
+			*prev = t
 		}
 
 		return err
@@ -205,7 +210,7 @@ func PositiveAssert(matcher Matcher) Matcher {
 // NegativeAssert succeeds only if the matcher fails. It does not consume input and returns an error if the matcher succeeds.
 func NegativeAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
-		t := *prev
+		t := snapshot(prev)
 		matchErr := matcher(prev)
 
 		switch matchErr {
@@ -226,7 +231,7 @@ func NegativeAssert(matcher Matcher) Matcher {
 // results are collected and all previously matched results are discarded.
 func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
-		original := *prev
+		t := snapshot(prev)
 		var acc strings.Builder
 		pluckMode := false
 
@@ -235,7 +240,7 @@ func Sequence(matchers ...Matcher) Matcher {
 
 			if err := m(prev); err != nil {
 				if err == ErrNoMatch {
-					*prev = original
+					*prev = t
 				}
 
 				return err
