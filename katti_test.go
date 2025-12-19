@@ -283,6 +283,20 @@ func TestSequence(t *testing.T) {
 				Rest:  "d",
 			},
 		},
+		{
+			name: "must restore input on error",
+			matcher: Sequence(
+				Char('a'),
+				Char('b'),
+				Char('c'),
+			),
+			input: "a$c",
+			err:   ErrNoMatch,
+			result: &MatchResult{
+				Match: "",
+				Rest:  "a$c",
+			},
+		},
 	}
 
 	runTable(t, table)

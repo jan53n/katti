@@ -229,6 +229,7 @@ func NegativeAssert(matcher Matcher) Matcher {
 // results are collected and all previously matched results are discarded.
 func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
+		original := *prev
 		var acc strings.Builder
 		pluckMode := false
 
@@ -236,6 +237,10 @@ func Sequence(matchers ...Matcher) Matcher {
 			prev.Match = ""
 
 			if err := m(prev); err != nil {
+				if err == ErrNoMatch {
+					*prev = original
+				}
+
 				return err
 			}
 
