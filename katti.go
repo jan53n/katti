@@ -99,7 +99,6 @@ var EndOfInput = NegativeAssert(AnyChar)
 var AnyChar = CharIn(0, '\uFFFF')
 
 // Action executes the matcher, then invokes a callback on the resulting MatchResult.
-// Bound variables are reset after the callback.
 func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 	return func(prev *MatchResult) (err error) {
 		err = matcher(prev)
@@ -109,8 +108,6 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 		}
 
 		err = cb(prev)
-		prev.BindVars = map[string]string{}
-
 		return err
 	}
 }
