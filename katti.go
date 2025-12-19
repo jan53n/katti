@@ -29,7 +29,7 @@ func snapshot(result *MatchResult) MatchResult {
 func Ref(m *Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		if *m == nil {
-			panic("Ref: uninitialized matcher")
+			return fmt.Errorf("matcher reference coudn't be resolved")
 		}
 
 		return (*m)(prev)
