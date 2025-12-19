@@ -288,13 +288,14 @@ func TestSequence(t *testing.T) {
 			matcher: Sequence(
 				Char('a'),
 				Char('b'),
+				Char('b'),
 				Char('c'),
 			),
-			input: "a$c",
+			input: "abb$c",
 			err:   ErrNoMatch,
 			result: &MatchResult{
 				Match: "",
-				Rest:  "a$c",
+				Rest:  "abb$c",
 			},
 		},
 	}
