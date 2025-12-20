@@ -15,7 +15,7 @@ type MatchResult struct {
 	Match    string
 	Rest     string
 	Pluck    bool
-	BindVars map[string]string
+	BindVars map[string][]string
 }
 
 type Matcher = func(prev *MatchResult) error
@@ -183,7 +183,11 @@ func Bind(variable string, matcher Matcher) Matcher {
 		err = matcher(prev)
 
 		if err == nil {
-			prev.BindVars[variable] = prev.Match
+			if prev.BindVars[variable] == nil {
+				prev.BindVars[variable] = []string{}
+			}
+
+			prev.BindVars[variable] = append(prev.BindVars[variable], prev.Match)
 		}
 		return err
 	}
@@ -298,7 +302,7 @@ func Pluck(matcher Matcher) Matcher {
 // Parse creates a new MatchResult, executes the matcher, and returns both the resulting MatchResult and any error.
 func Parse(matcher Matcher, input string) (*MatchResult, error) {
 	match := &MatchResult{
-		BindVars: make(map[string]string),
+		BindVars: make(map[string][]string),
 		Rest:     input,
 	}
 
