@@ -70,7 +70,7 @@ func CharIn(start rune, end rune) Matcher {
 	}
 }
 
-// Char is a convenience wrapper over CharIn for matching a single rune.
+// Char checks whether the first rune of the input equals to one of the char in []char
 func Char(char ...rune) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if len(prev.Rest) == 0 {
