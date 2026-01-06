@@ -28,10 +28,6 @@ func snapshot(result *MatchResult) MatchResult {
 
 func Ref(m *Matcher) Matcher {
 	return func(prev *MatchResult) error {
-		if m == nil || *m == nil {
-			return fmt.Errorf("matcher reference coudn't be resolved")
-		}
-
 		return (*m)(prev)
 	}
 }
