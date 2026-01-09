@@ -111,16 +111,17 @@ func TestRepeat(t *testing.T) {
 }
 
 func TestRepeatRange(t *testing.T) {
+	ws := Char(' ')
 	table := []testTableItem{
 		{
 			name:    "min=0 max=3 | too many matches causes failure",
-			matcher: RepeatRange(Char('j'), 0, 3),
+			matcher: RepeatRange(Char('j'), 0, 3, nil),
 			input:   "jjaaansen",
 			err:     ErrNoMatch,
 		},
 		{
 			name:    "min=0 max=3 | exact max matches succeeds",
-			matcher: RepeatRange(Char('j'), 0, 3),
+			matcher: RepeatRange(Char('j'), 0, 3, nil),
 			input:   "jjjansen",
 			result: &MatchResult{
 				Match: "jjj",
@@ -129,7 +130,7 @@ func TestRepeatRange(t *testing.T) {
 		},
 		{
 			name:    "min=0 max=3 | fewer than max matches succeeds",
-			matcher: RepeatRange(Char('j'), 0, 3),
+			matcher: RepeatRange(Char('j'), 0, 3, nil),
 			input:   "jansen",
 			result: &MatchResult{
 				Match: "j",
@@ -138,13 +139,13 @@ func TestRepeatRange(t *testing.T) {
 		},
 		{
 			name:    "min=1 max=3 | zero matches fails",
-			matcher: RepeatRange(Char('j'), 1, 3),
+			matcher: RepeatRange(Char('j'), 1, 3, nil),
 			input:   "ansen",
 			err:     ErrNoMatch,
 		},
 		{
 			name:    "min=1 max=3 | one match succeeds",
-			matcher: RepeatRange(Char('j'), 1, 3),
+			matcher: RepeatRange(Char('j'), 1, 3, nil),
 			input:   "jansen",
 			result: &MatchResult{
 				Match: "j",
@@ -153,13 +154,13 @@ func TestRepeatRange(t *testing.T) {
 		},
 		{
 			name:    "min=2 max=3 | one match fails",
-			matcher: RepeatRange(Char('j'), 2, 3),
+			matcher: RepeatRange(Char('j'), 2, 3, nil),
 			input:   "jansen",
 			err:     ErrNoMatch,
 		},
 		{
 			name:    "min=2 max=3 | two matches succeeds",
-			matcher: RepeatRange(Char('j'), 2, 3),
+			matcher: RepeatRange(Char('j'), 2, 3, nil),
 			input:   "jjansen",
 			result: &MatchResult{
 				Match: "jj",
@@ -168,7 +169,7 @@ func TestRepeatRange(t *testing.T) {
 		},
 		{
 			name:    "min=2 max=2 | exact match succeeds",
-			matcher: RepeatRange(Char('j'), 2, 2),
+			matcher: RepeatRange(Char('j'), 2, 2, nil),
 			input:   "jjansen",
 			result: &MatchResult{
 				Match: "jj",
@@ -177,13 +178,13 @@ func TestRepeatRange(t *testing.T) {
 		},
 		{
 			name:    "min=2 max=2 | overflow fails",
-			matcher: RepeatRange(Char('j'), 2, 2),
+			matcher: RepeatRange(Char('j'), 2, 2, nil),
 			input:   "jjjansen",
 			err:     ErrNoMatch,
 		},
 		{
 			name:    "min=0 max=0 | zero-width succeeds",
-			matcher: RepeatRange(Char('j'), 0, 0),
+			matcher: RepeatRange(Char('j'), 0, 0, nil),
 			input:   "jansen",
 			result: &MatchResult{
 				Match: "",
@@ -192,7 +193,7 @@ func TestRepeatRange(t *testing.T) {
 		},
 		{
 			name:    "min=1 max=-1 | unbounded upper, enough matches",
-			matcher: RepeatRange(Char('j'), 1, -1),
+			matcher: RepeatRange(Char('j'), 1, -1, nil),
 			input:   "jjjjansen",
 			result: &MatchResult{
 				Match: "jjjj",
@@ -201,18 +202,39 @@ func TestRepeatRange(t *testing.T) {
 		},
 		{
 			name:    "min=1 max=-1 | unbounded upper, zero matches fails",
-			matcher: RepeatRange(Char('j'), 1, -1),
+			matcher: RepeatRange(Char('j'), 1, -1, nil),
 			input:   "ansen",
 			err:     ErrNoMatch,
 		},
 		{
 			name:    "min=0 max=-1 | fully unbounded behaves like Repeat allowEmpty",
-			matcher: RepeatRange(Char('j'), 0, -1),
+			matcher: RepeatRange(Char('j'), 0, -1, nil),
 			input:   "jjjansen",
 			result: &MatchResult{
 				Match: "jjj",
 				Rest:  "ansen",
 			},
+		},
+		{
+			name:    "min=0 max=-1 | must match seperator",
+			matcher: RepeatRange(Char('j'), 0, -1, &ws),
+			input:   "j j j",
+			result: &MatchResult{
+				Match: "j j j",
+				Rest:  "",
+			},
+		},
+		{
+			name:    "min=0 max=-1 | must fail to match trailing space",
+			matcher: RepeatRange(Char('j'), 0, -1, &ws),
+			input:   "j j j ",
+			err:     ErrNoMatch,
+		},
+		{
+			name:    "min=0 max=-1 | must fail to match leading space",
+			matcher: RepeatRange(Char('j'), 0, -1, &ws),
+			input:   " j j j",
+			err:     ErrNoMatch,
 		},
 	}
 
