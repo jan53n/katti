@@ -15,6 +15,7 @@ type MatchResult struct {
 	Match    string
 	Rest     string
 	Pluck    bool
+	NoAction bool
 	BindVars map[string][]string
 }
 
@@ -24,6 +25,21 @@ func snapshot(result *MatchResult) MatchResult {
 	newResult := *result
 	newResult.BindVars = maps.Clone(newResult.BindVars)
 	return newResult
+}
+
+func NoAction(m Matcher) Matcher {
+	return func(prev *MatchResult) (err error) {
+		old := prev.NoAction
+		prev.NoAction = true
+
+		err = m(prev)
+
+		if err == nil {
+			prev.NoAction = old
+		}
+
+		return err
+	}
 }
 
 func Ref(m *Matcher) Matcher {
