@@ -44,6 +44,10 @@ func NoAction(m Matcher) Matcher {
 
 func Ref(m *Matcher) Matcher {
 	return func(prev *MatchResult) error {
+		if m == nil || *m == nil {
+			return fmt.Errorf("Ref to uninitialized matcher")
+		}
+
 		return (*m)(prev)
 	}
 }
@@ -102,10 +106,16 @@ func Char(char ...rune) Matcher {
 }
 
 // Leak executes the matcher and always prints the match result and error to standard output.
-func Leak(matcher Matcher) Matcher {
+func Leak(matcher Matcher, label string) Matcher {
 	return func(prev *MatchResult) error {
 		err := matcher(prev)
-		fmt.Printf("(L) %#v (%#v)\n", prev, err)
+		fmt.Printf("Leak (%v)\n---\nprev: %#v \nerror: (%#v)\nmatcher: %#v\n---\n", label, prev, err, matcher)
+		return err
+	}
+}
+
+func Noop(err error) Matcher {
+	return func(prev *MatchResult) error {
 		return err
 	}
 }
