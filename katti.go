@@ -126,9 +126,7 @@ var EndOfInput = NegativeAssert(AnyChar)
 // Action executes the matcher, then invokes a callback on the resulting MatchResult.
 func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 	return func(prev *MatchResult) (err error) {
-		if prev.NoAction {
-			return err
-		}
+		noAct := prev.NoAction
 
 		err = matcher(prev)
 
@@ -136,7 +134,10 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 			return err
 		}
 
-		err = cb(prev)
+		if !noAct {
+			err = cb(prev)
+		}
+
 		return err
 	}
 }
