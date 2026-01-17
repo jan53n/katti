@@ -2,23 +2,21 @@ package katti
 
 import (
 	"errors"
-	"maps"
 )
 
 var ErrNoMatch = errors.New("No match found")
+
+type BindVar struct {
+	Key string
+	Val string
+}
 
 type MatchResult struct {
 	Match    string
 	Rest     string
 	Pluck    bool
 	NoAction bool
-	BindVars map[string][]string
+	BindVars []BindVar
 }
 
 type Matcher = func(prev *MatchResult) error
-
-func snapshot(result *MatchResult) MatchResult {
-	newResult := *result
-	newResult.BindVars = maps.Clone(newResult.BindVars)
-	return newResult
-}

@@ -45,7 +45,7 @@ func expectResult(t *testing.T, matcher Matcher, input string, expected *MatchRe
 	}
 
 	if expected.BindVars == nil {
-		expected.BindVars = make(map[string][]string)
+		expected.BindVars = []BindVar{}
 	}
 
 	if !reflect.DeepEqual(r.BindVars, expected.BindVars) {
