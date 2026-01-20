@@ -12,14 +12,16 @@ func (bm *BindMap) Set(v BindVar) {
 	*bm = append(*bm, v)
 }
 
-func (bm *BindMap) Get(k string) (string, bool) {
+func (bm *BindMap) Get(k string) []string {
+	results := []string{}
+
 	for _, i := range *bm {
 		if k == i.Key {
-			return i.Val, true
+			results = append(results, i.Val)
 		}
 	}
 
-	return "", false
+	return results
 }
 
 type BindVar struct {
