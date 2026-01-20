@@ -329,5 +329,15 @@ func Parse(matcher Matcher, input string) (*MatchResult, error) {
 	}
 
 	err := matcher(match)
+
+	if err != nil {
+		return match, err
+	}
+
+	for _, thunk := range match.Thunks {
+		if err := thunk(); err != nil {
+			return match, err
+		}
+	}
 	return match, err
 }
