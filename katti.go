@@ -115,7 +115,9 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 		}
 
 		if !noAct {
-			err = cb(prev)
+			prev.Thunks = append(prev.Thunks, func() error {
+				return cb(prev)
+			})
 		}
 
 		return err
@@ -203,11 +205,12 @@ func Bind(variable string, matcher Matcher) Matcher {
 		err = matcher(prev)
 
 		if err == nil {
-			if prev.BindVars[variable] == nil {
-				prev.BindVars[variable] = []string{}
-			}
-
-			prev.BindVars[variable] = append(prev.BindVars[variable], prev.Match)
+			prev.BindVars.Set(
+				BindVar{
+					Key: variable,
+					Val: prev.Match,
+				},
+			)
 		}
 		return err
 	}
@@ -216,7 +219,7 @@ func Bind(variable string, matcher Matcher) Matcher {
 // PositiveAssert succeeds only if the matcher succeeds and does not consume input.
 func PositiveAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
-		t := snapshot(prev)
+		t := *prev
 		err = matcher(prev)
 
 		if err == nil {
@@ -231,7 +234,7 @@ func PositiveAssert(matcher Matcher) Matcher {
 // NegativeAssert succeeds only if the matcher fails. It does not consume input and returns an error if the matcher succeeds.
 func NegativeAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
-		t := snapshot(prev)
+		t := *prev
 		matchErr := matcher(prev)
 
 		switch matchErr {
@@ -252,7 +255,7 @@ func NegativeAssert(matcher Matcher) Matcher {
 // results are collected and all previously matched results are discarded.
 func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
-		t := snapshot(prev)
+		t := *prev
 		var acc strings.Builder
 		pluckMode := false
 
@@ -322,8 +325,7 @@ func Pluck(matcher Matcher) Matcher {
 // Parse creates a new MatchResult, executes the matcher, and returns both the resulting MatchResult and any error.
 func Parse(matcher Matcher, input string) (*MatchResult, error) {
 	match := &MatchResult{
-		BindVars: make(map[string][]string),
-		Rest:     input,
+		Rest: input,
 	}
 
 	err := matcher(match)
