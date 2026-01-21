@@ -115,8 +115,9 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 		}
 
 		if !noAct {
+			snapshot := *prev
 			prev.Thunks = append(prev.Thunks, func() error {
-				return cb(prev)
+				return cb(&snapshot)
 			})
 		}
 
