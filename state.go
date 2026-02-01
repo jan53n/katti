@@ -24,6 +24,18 @@ func (bm *BindMap) Get(k string) []string {
 	return results
 }
 
+func (bm *BindMap) Delete(k string) {
+	results := []BindVar{}
+
+	for _, i := range *bm {
+		if k != i.Key {
+			results = append(results, i)
+		}
+	}
+
+	*bm = results
+}
+
 type BindVar struct {
 	Key string
 	Val string
