@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -88,14 +89,18 @@ func Char(char ...rune) Matcher {
 // Leak executes the matcher and always prints the match result and error to standard output.
 func Leak(matcher Matcher, label string) Matcher {
 	return func(prev *MatchResult) error {
+		t0 := time.Now()
 		err := matcher(prev)
-		fmt.Printf("Leak (%v)\n---\nprev: %#v \nerror: (%#v)\nmatcher: %#v\n---\n", label, prev, err, matcher)
-		return err
-	}
-}
 
-func Noop(err error) Matcher {
-	return func(prev *MatchResult) error {
+		fmt.Printf(
+			"Leak (%v)\n---\nprev: %#v \nerror: (%#v)\nmatcher: %#v\ntime: %v\n---\n",
+			label,
+			prev,
+			err,
+			matcher,
+			time.Since(t0),
+		)
+
 		return err
 	}
 }
