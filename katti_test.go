@@ -296,7 +296,7 @@ func TestSequence(t *testing.T) {
 			name: "must drop non pluck matchers",
 			matcher: Sequence(
 				Char('a'),
-				Pluck(Char('b')),
+				Skip(Char('b')),
 				Char('c'),
 			),
 			input: "abcd",

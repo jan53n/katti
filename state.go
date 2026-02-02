@@ -12,8 +12,8 @@ func (bm *BindMap) Set(v BindVar) {
 	*bm = append(*bm, v)
 }
 
-func (bm *BindMap) Get(k string) []string {
-	results := []string{}
+func (bm *BindMap) Get(k string) [][]string {
+	results := [][]string{}
 
 	for _, i := range *bm {
 		if k == i.Key {
@@ -38,13 +38,12 @@ func (bm *BindMap) Delete(k string) {
 
 type BindVar struct {
 	Key string
-	Val string
+	Val []string
 }
 
 type MatchResult struct {
-	Match    string
+	Match    []string
 	Rest     string
-	Pluck    bool
 	NoAction bool
 	BindVars BindMap
 	Thunks   []func() error

@@ -23,6 +23,20 @@ func NoAction(m Matcher) Matcher {
 	}
 }
 
+func Join(m Matcher) Matcher {
+	return func(prev *MatchResult) (err error) {
+
+		oldlen := len(prev.Match)
+		err = m(prev)
+
+		if err == nil {
+			prev.Match = append(prev.Match[:oldlen], strings.Join(prev.Match[oldlen:], ""))
+		}
+
+		return err
+	}
+}
+
 func Ref(m *Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		if m == nil || *m == nil {
@@ -37,8 +51,9 @@ func Ref(m *Matcher) Matcher {
 func Literal(literalString string) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if strings.HasPrefix(prev.Rest, literalString) {
-			prev.Match = literalString
-			prev.Rest = prev.Rest[len(literalString):]
+			ms := len(literalString)
+			prev.Match = append(prev.Match, prev.Rest[:ms])
+			prev.Rest = prev.Rest[ms:]
 		} else {
 			err = ErrNoMatch
 		}
@@ -57,7 +72,7 @@ func CharIn(start rune, end rune) Matcher {
 		r, size := utf8.DecodeRuneInString(prev.Rest)
 
 		if r >= start && r <= end {
-			prev.Match = prev.Rest[:size]
+			prev.Match = append(prev.Match, prev.Rest[:size])
 			prev.Rest = prev.Rest[size:]
 		} else {
 			err = ErrNoMatch
@@ -77,7 +92,7 @@ func Char(char ...rune) Matcher {
 		r, size := utf8.DecodeRuneInString(prev.Rest)
 
 		if slices.Contains(char, r) {
-			prev.Match = prev.Rest[:size]
+			prev.Match = append(prev.Match, prev.Rest[:size])
 			prev.Rest = prev.Rest[size:]
 			return nil
 		}
@@ -113,7 +128,9 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 	return func(prev *MatchResult) (err error) {
 		noAct := prev.NoAction
 
+		oldlen := len(prev.Match)
 		err = matcher(prev)
+		newlen := len(prev.Match)
 
 		if err != nil {
 			return err
@@ -121,6 +138,8 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 
 		if !noAct {
 			snapshot := *prev
+			snapshot.Match = snapshot.Match[oldlen:newlen]
+
 			prev.Thunks = append(prev.Thunks, func() error {
 				return cb(&snapshot)
 			})
@@ -136,7 +155,7 @@ func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
 	hasLower := min != -1
 
 	return func(prev *MatchResult) (err error) {
-		var acc strings.Builder
+		var acc []string
 		matchCount := 0
 
 		for len(prev.Rest) > 0 {
@@ -144,7 +163,7 @@ func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
 				break
 			}
 
-			prev.Match = ""
+			prev.Match = []string{}
 
 			if (matchCount+1)%2 == 0 && sep != nil {
 				matcher = Sequence(*sep, matcher)
@@ -158,10 +177,7 @@ func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
 				return err
 			}
 
-			if _, err = acc.WriteString(prev.Match); err != nil {
-				return err
-			}
-
+			acc = append(acc, prev.Match...)
 			matchCount++
 		}
 
@@ -169,7 +185,7 @@ func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
 			return ErrNoMatch
 		}
 
-		prev.Match = acc.String()
+		prev.Match = acc
 		return nil
 	}
 }
@@ -208,13 +224,15 @@ func Optional(matcher Matcher) Matcher {
 // Binds the matched string to a named variable.
 func Bind(variable string, matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
+		oldlen := len(prev.Match)
 		err = matcher(prev)
+		newlen := len(prev.Match)
 
 		if err == nil {
 			prev.BindVars.Set(
 				BindVar{
 					Key: variable,
-					Val: prev.Match,
+					Val: prev.Match[oldlen:newlen],
 				},
 			)
 		}
@@ -262,11 +280,10 @@ func NegativeAssert(matcher Matcher) Matcher {
 func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		t := *prev
-		var acc strings.Builder
-		pluckMode := false
+		var acc []string
 
 		for _, m := range matchers {
-			prev.Match = ""
+			prev.Match = []string{}
 
 			if err := m(prev); err != nil {
 				if err == ErrNoMatch {
@@ -276,25 +293,10 @@ func Sequence(matchers ...Matcher) Matcher {
 				return err
 			}
 
-			if !pluckMode && prev.Pluck {
-				acc.Reset()
-				pluckMode = true
-			}
-
-			if pluckMode {
-				if prev.Pluck {
-					acc.WriteString(prev.Match)
-					prev.Pluck = false
-				}
-
-				continue
-			}
-
-			acc.WriteString(prev.Match)
+			acc = append(acc, prev.Match...)
 		}
 
-		prev.Match = acc.String()
-		prev.Pluck = false
+		prev.Match = acc
 		return nil
 	}
 }
@@ -315,13 +317,15 @@ func Alternation(matchers ...Matcher) Matcher {
 	}
 }
 
-// Pluck marks a MatchResult as plucked.
-func Pluck(matcher Matcher) Matcher {
+// Skip marks a MatchResult as plucked.
+func Skip(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
+		oldlen := len(prev.Match)
 		err = matcher(prev)
+		newlen := oldlen + (len(prev.Match) - oldlen)
 
 		if err == nil {
-			prev.Pluck = true
+			prev.Match = append(prev.Match[:oldlen], prev.Match[newlen:]...)
 		}
 
 		return err
