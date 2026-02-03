@@ -155,15 +155,12 @@ func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
 	hasLower := min != -1
 
 	return func(prev *MatchResult) (err error) {
-		var acc []string
 		matchCount := 0
 
 		for len(prev.Rest) > 0 {
 			if hasUpper && matchCount == max {
 				break
 			}
-
-			prev.Match = []string{}
 
 			if (matchCount+1)%2 == 0 && sep != nil {
 				matcher = Sequence(*sep, matcher)
@@ -177,7 +174,6 @@ func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
 				return err
 			}
 
-			acc = append(acc, prev.Match...)
 			matchCount++
 		}
 
@@ -185,7 +181,6 @@ func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
 			return ErrNoMatch
 		}
 
-		prev.Match = acc
 		return nil
 	}
 }
@@ -280,11 +275,8 @@ func NegativeAssert(matcher Matcher) Matcher {
 func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		t := *prev
-		var acc []string
 
 		for _, m := range matchers {
-			prev.Match = []string{}
-
 			if err := m(prev); err != nil {
 				if err == ErrNoMatch {
 					*prev = t
@@ -292,11 +284,8 @@ func Sequence(matchers ...Matcher) Matcher {
 
 				return err
 			}
-
-			acc = append(acc, prev.Match...)
 		}
 
-		prev.Match = acc
 		return nil
 	}
 }
