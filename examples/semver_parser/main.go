@@ -50,7 +50,7 @@ func main() {
 			Repeat(
 				Sequence(
 					dot,
-					Pluck(preReleaseIdentifier),
+					Skip(preReleaseIdentifier),
 				),
 				true,
 			),
@@ -68,7 +68,7 @@ func main() {
 			Repeat(
 				Sequence(
 					dot,
-					Pluck(buildIdentifier),
+					Skip(buildIdentifier),
 				),
 				true,
 			),
@@ -89,7 +89,7 @@ func main() {
 			Optional(
 				Sequence(
 					Char('-'),
-					Pluck(preRelease),
+					Skip(preRelease),
 				),
 			),
 		),
@@ -97,7 +97,7 @@ func main() {
 			Optional(
 				Sequence(
 					Char('+'),
-					Pluck(build),
+					Skip(build),
 				),
 			),
 		),
