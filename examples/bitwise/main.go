@@ -24,7 +24,8 @@ func printExpression(items []item) {
 		if w := len(t.repr); w > maxReprWidth {
 			maxReprWidth = w
 		}
-		if w := len(strconv.FormatInt(t.value, 2)); w > maxBinWidth {
+		fmt.Println(t.value, len(strconv.FormatInt(t.value, 2)))
+		if w := len(fmt.Sprintf("%b", uint64(t.value))); w > maxBinWidth {
 			maxBinWidth = w
 		}
 	}
@@ -37,7 +38,7 @@ func printExpression(items []item) {
 		}
 
 		format := fmt.Sprintf("\t %v %%%ds %%0%db\n", formatOp, maxReprWidth, maxBinWidth)
-		fmt.Printf(format, t.repr, t.value)
+		fmt.Printf(format, t.repr, uint64(t.value))
 	}
 }
 
