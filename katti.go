@@ -8,6 +8,7 @@ import (
 	"unicode/utf8"
 )
 
+// NoAction prevents Action combinators from producing delayed-execution thunks.
 func NoAction(m Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		old := prev.NoAction
@@ -23,6 +24,7 @@ func NoAction(m Matcher) Matcher {
 	}
 }
 
+// Join merges newly matched match strings into a string
 func Join(m Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 
@@ -37,6 +39,7 @@ func Join(m Matcher) Matcher {
 	}
 }
 
+// Ref resolves the referenced Matcher at runtime.
 func Ref(m *Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		if m == nil || *m == nil {
