@@ -153,7 +153,7 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 }
 
 // RepeatRange applies the matcher repeatedly, requiring the number of matches to fall within the given bounds.
-func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
+func RepeatRange(matcher Matcher, min, max int) Matcher {
 	hasUpper := max != -1
 	hasLower := min != -1
 
@@ -163,10 +163,6 @@ func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
 		for len(prev.Rest) > 0 {
 			if hasUpper && matchCount == max {
 				break
-			}
-
-			if (matchCount+1)%2 == 0 && sep != nil {
-				matcher = Sequence(*sep, matcher)
 			}
 
 			err = matcher(prev)
@@ -192,18 +188,27 @@ func RepeatRange(matcher Matcher, min, max int, sep *Matcher) Matcher {
 // If allowEmpty is false, at least one successful match is required.
 func Repeat(matcher Matcher, allowEmpty bool) Matcher {
 	if allowEmpty {
-		return RepeatRange(matcher, 0, -1, nil)
+		return RepeatRange(matcher, 0, -1)
 	}
 
-	return RepeatRange(matcher, 1, -1, nil)
+	return RepeatRange(matcher, 1, -1)
 }
 
 func SepBy(matcher Matcher, sep Matcher, allowEmpty bool) Matcher {
 	if allowEmpty {
-		return RepeatRange(matcher, 0, -1, &sep)
+		matcher = Optional(matcher)
 	}
 
-	return RepeatRange(matcher, 1, -1, &sep)
+	return Sequence(
+		matcher,
+		Repeat(
+			Sequence(
+				sep,
+				matcher,
+			),
+			true,
+		),
+	)
 }
 
 // Optional attempts to apply the matcher; if it fails, the error is suppressed and no input is consumed.
