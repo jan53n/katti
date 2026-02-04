@@ -12,6 +12,8 @@ func main() {
 	digit := CharIn('0', '9')
 	dot := Char('.')
 
+	skipdot := Skip(dot)
+
 	numericIdentifier := Alternation(
 		Char('0'),
 		Sequence(
@@ -49,8 +51,8 @@ func main() {
 		Bind("pr_tail",
 			Repeat(
 				Sequence(
-					dot,
-					Skip(preReleaseIdentifier),
+					skipdot,
+					preReleaseIdentifier,
 				),
 				true,
 			),
@@ -67,8 +69,8 @@ func main() {
 		Bind("b_tail",
 			Repeat(
 				Sequence(
-					dot,
-					Skip(buildIdentifier),
+					skipdot,
+					buildIdentifier,
 				),
 				true,
 			),
@@ -88,16 +90,16 @@ func main() {
 		Bind("pre",
 			Optional(
 				Sequence(
-					Char('-'),
-					Skip(preRelease),
+					Skip(Char('-')),
+					preRelease,
 				),
 			),
 		),
 		Bind("build",
 			Optional(
 				Sequence(
-					Char('+'),
-					Skip(build),
+					Skip(Char('+')),
+					build,
 				),
 			),
 		),
