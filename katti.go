@@ -194,6 +194,7 @@ func Repeat(matcher Matcher, allowEmpty bool) Matcher {
 	return RepeatRange(matcher, 1, -1)
 }
 
+// SepBy creates a list like matcher with a `sep` been used as seperator
 func SepBy(matcher Matcher, sep Matcher, allowEmpty bool) Matcher {
 	if allowEmpty {
 		matcher = Optional(matcher)
