@@ -310,7 +310,7 @@ func Alternation(matchers ...Matcher) Matcher {
 	}
 }
 
-// Skip marks a MatchResult as plucked.
+// Skip removes matched results of the matcher from Match
 func Skip(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		oldlen := len(prev.Match)
