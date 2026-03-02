@@ -8,7 +8,7 @@ import (
 	"unicode/utf8"
 )
 
-// NoAction prevents Action combinators from producing delayed-execution thunks.
+// NoAction prevents Action combinators from producing Action thunks.
 func NoAction(m Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		t := prev.Thunks
@@ -103,7 +103,7 @@ func Char(char ...rune) Matcher {
 	}
 }
 
-// Leak executes the matcher and always prints the match result and error to standard output.
+// Leak executes the matcher and prints debug info.
 func Leak(matcher Matcher, label string) Matcher {
 	return func(prev *MatchResult) error {
 		t0 := time.Now()
