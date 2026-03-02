@@ -11,13 +11,12 @@ import (
 // NoAction prevents Action combinators from producing delayed-execution thunks.
 func NoAction(m Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
-		old := prev.NoAction
-		prev.NoAction = true
+		t := prev.Thunks
 
 		err = m(prev)
 
 		if err == nil {
-			prev.NoAction = old
+			prev.Thunks = t
 		}
 
 		return err
@@ -129,8 +128,6 @@ var EndOfInput = NegativeAssert(AnyChar)
 // Action executes the matcher, then invokes a callback on the resulting MatchResult.
 func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 	return func(prev *MatchResult) (err error) {
-		noAct := prev.NoAction
-
 		oldlen := len(prev.Match)
 		err = matcher(prev)
 		newlen := len(prev.Match)
@@ -139,14 +136,12 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 			return err
 		}
 
-		if !noAct {
-			snapshot := *prev
-			snapshot.Match = snapshot.Match[oldlen:newlen]
+		snapshot := *prev
+		snapshot.Match = snapshot.Match[oldlen:newlen]
 
-			prev.Thunks = append(prev.Thunks, func() error {
-				return cb(&snapshot)
-			})
-		}
+		prev.Thunks = append(prev.Thunks, func() error {
+			return cb(&snapshot)
+		})
 
 		return err
 	}
@@ -330,7 +325,7 @@ func Skip(matcher Matcher) Matcher {
 	}
 }
 
-// Parse creates a new MatchResult, executes the matcher, and returns both the resulting MatchResult and any error.
+// Parse executes the matcher, processes thunks
 func Parse(matcher Matcher, input string) (*MatchResult, error) {
 	match := &MatchResult{
 		Rest: input,

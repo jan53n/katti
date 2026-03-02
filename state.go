@@ -44,7 +44,6 @@ type BindVar struct {
 type MatchResult struct {
 	Match    []string
 	Rest     string
-	NoAction bool
 	BindVars BindMap
 	Thunks   []func() error
 }
