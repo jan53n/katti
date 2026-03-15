@@ -129,6 +129,9 @@ var EndOfInput = NegativeAssert(AnyChar)
 func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 	return func(prev *MatchResult) (err error) {
 		oldlen := len(prev.Match)
+
+		prev.Bindings.appendBindMap()
+
 		err = matcher(prev)
 		newlen := len(prev.Match)
 
@@ -140,7 +143,9 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 		snapshot.Match = snapshot.Match[oldlen:newlen]
 
 		prev.Thunks = append(prev.Thunks, func() error {
-			return cb(&snapshot)
+			r := cb(&snapshot)
+			snapshot.Bindings.popBindMap()
+			return r
 		})
 
 		return err
@@ -228,12 +233,7 @@ func Bind(variable string, matcher Matcher) Matcher {
 		newlen := len(prev.Match)
 
 		if err == nil {
-			prev.BindVars.Set(
-				BindVar{
-					Key: variable,
-					Val: prev.Match[oldlen:newlen],
-				},
-			)
+			prev.Bindings.Set(variable, prev.Match[oldlen:newlen])
 		}
 		return err
 	}
