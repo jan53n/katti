@@ -7,19 +7,6 @@ import (
 	. "jnsn.in/katti"
 )
 
-const (
-	PR_HEAD int16 = iota
-	PR_TAIL
-	B_HEAD
-	B_TAIL
-	MAJOR
-	MINOR
-	PATCH
-	VERSION_CORE
-	PRE
-	BUILD
-)
-
 func main() {
 	positiveDigit := CharIn('1', '9')
 	digit := CharIn('0', '9')
@@ -60,8 +47,8 @@ func main() {
 	)
 
 	preRelease := Sequence(
-		Bind(PR_HEAD, preReleaseIdentifier),
-		Bind(PR_TAIL,
+		Bind("PR_HEAD", preReleaseIdentifier),
+		Bind("PR_TAIL",
 			Repeat(
 				Sequence(
 					skipdot,
@@ -78,8 +65,8 @@ func main() {
 	)
 
 	build := Sequence(
-		Bind(B_HEAD, buildIdentifier),
-		Bind(B_TAIL,
+		Bind("B_HEAD", buildIdentifier),
+		Bind("B_TAIL",
 			Repeat(
 				Sequence(
 					skipdot,
@@ -91,16 +78,16 @@ func main() {
 	)
 
 	versionCore := Sequence(
-		Bind(MAJOR, numericIdentifier),
+		Bind("MAJOR", numericIdentifier),
 		dot,
-		Bind(MINOR, numericIdentifier),
+		Bind("MINOR", numericIdentifier),
 		dot,
-		Bind(PATCH, numericIdentifier),
+		Bind("PATCH", numericIdentifier),
 	)
 
 	semver := Sequence(
-		Bind(VERSION_CORE, versionCore),
-		Bind(PRE,
+		Bind("VERSION_CORE", versionCore),
+		Bind("PRE",
 			Optional(
 				Sequence(
 					Skip(Char('-')),
@@ -108,7 +95,7 @@ func main() {
 				),
 			),
 		),
-		Bind(BUILD,
+		Bind("BUILD",
 			Optional(
 				Sequence(
 					Skip(Char('+')),

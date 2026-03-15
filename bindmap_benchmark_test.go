@@ -18,7 +18,7 @@ func BenchmarkBindMap_Get(b *testing.B) {
 	k := randomChar()
 
 	for range 100 {
-		bm.startBindMap()
+		bm.appendBindMap()
 
 		for range 10 {
 			k := randomChar()
