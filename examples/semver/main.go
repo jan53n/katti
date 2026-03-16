@@ -7,7 +7,15 @@ import (
 	. "jnsn.in/katti"
 )
 
-func ParseSemver() (*MatchResult, error) {
+type ver struct {
+	major      string
+	minor      string
+	patch      string
+	preRelease string
+	build      string
+}
+
+func ParseSemver() (info ver, err error) {
 	positiveDigit := CharIn('1', '9')
 	digit := CharIn('0', '9')
 	dot := Char('.')
@@ -45,10 +53,10 @@ func ParseSemver() (*MatchResult, error) {
 		numericIdentifier,
 	)
 
-	preRelease := Sequence(
-		Bind("PR_HEAD", Join(preReleaseIdentifier)),
-		Bind("PR_TAIL",
-			Join(
+	preRelease := Action(
+		Sequence(
+			Bind("PR_HEAD", preReleaseIdentifier),
+			Bind("PR_TAIL",
 				Repeat(
 					Sequence(
 						skipdot,
@@ -58,6 +66,10 @@ func ParseSemver() (*MatchResult, error) {
 				),
 			),
 		),
+		func(result *MatchResult) error {
+			info.preRelease = result.Bindings.GetString("PR_HEAD") + result.Bindings.GetString("PR_TAIL")
+			return nil
+		},
 	)
 
 	buildIdentifier := Alternation(
@@ -65,56 +77,68 @@ func ParseSemver() (*MatchResult, error) {
 		Repeat(digit, false),
 	)
 
-	build := Sequence(
-		Bind("B_HEAD", buildIdentifier),
-		Bind("B_TAIL",
-			Repeat(
-				Sequence(
-					skipdot,
-					buildIdentifier,
+	build := Action(
+		Sequence(
+			Bind("B_HEAD", buildIdentifier),
+			Bind("B_TAIL",
+				Repeat(
+					Sequence(
+						skipdot,
+						buildIdentifier,
+					),
+					true,
 				),
-				true,
 			),
 		),
+		func(result *MatchResult) error {
+			info.build = result.Bindings.GetString("B_HEAD") + result.Bindings.GetString("B_TAIL")
+			return nil
+		},
 	)
 
-	versionCore := Sequence(
-		Bind("MAJOR", Join(numericIdentifier)),
-		dot,
-		Bind("MINOR", Join(numericIdentifier)),
-		dot,
-		Bind("PATCH", Join(numericIdentifier)),
+	versionCore := Action(
+		Sequence(
+			Bind("MAJOR", Join(numericIdentifier)),
+			dot,
+			Bind("MINOR", Join(numericIdentifier)),
+			dot,
+			Bind("PATCH", Join(numericIdentifier)),
+		),
+		func(result *MatchResult) error {
+			info.major = result.Bindings.GetString("MAJOR")
+			info.minor = result.Bindings.GetString("MINOR")
+			info.patch = result.Bindings.GetString("PATCH")
+			return nil
+		},
 	)
 
 	semver := Sequence(
-		Bind("VERSION_CORE", Join(versionCore)),
-		Bind("PRE",
-			Optional(
-				Sequence(
-					Skip(Char('-')),
-					preRelease,
-				),
+		versionCore,
+		Optional(
+			Sequence(
+				Skip(Char('-')),
+				preRelease,
 			),
 		),
-		Bind("BUILD",
-			Join(
-				Optional(
-					Sequence(
-						Skip(Char('+')),
-						build,
-					),
-				),
+		Optional(
+			Sequence(
+				Skip(Char('+')),
+				build,
 			),
 		),
 	)
 
-	return Parse(semver, "1.0.0-alpha+rr")
+	if _, err := Parse(semver, "1.2.3-alpha+rr"); err != nil {
+		return info, err
+	}
+
+	return info, err
 }
 
 func main() {
-	if mr, err := ParseSemver(); err != nil {
+	if info, err := ParseSemver(); err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println(mr)
+		fmt.Printf("%#v\n", info)
 	}
 }
