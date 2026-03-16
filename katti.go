@@ -144,7 +144,6 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 
 		prev.Thunks = append(prev.Thunks, func() error {
 			r := cb(&snapshot)
-			snapshot.Bindings.popBindMap()
 			return r
 		})
 
@@ -233,7 +232,38 @@ func Bind(variable string, matcher Matcher) Matcher {
 		newlen := len(prev.Match)
 
 		if err == nil {
-			prev.Bindings.Set(variable, prev.Match[oldlen:newlen])
+			prev.Bindings.Set(
+				variable,
+				BindValue{
+					valueType: Match,
+					value:     prev.Match[oldlen:newlen],
+				},
+			)
+		}
+		return err
+	}
+}
+
+// Binds the matched string to a named variable.
+func BindList(variable string, matcher Matcher) Matcher {
+	return func(prev *MatchResult) (err error) {
+		oldlen := len(prev.Match)
+		err = matcher(prev)
+		newlen := len(prev.Match)
+
+		if err == nil {
+			existing := [][]string{}
+			if bv, ok := prev.Bindings.get(variable); ok && bv.valueType == MatchList {
+				existing = bv.value.([][]string)
+			}
+
+			prev.Bindings.Set(
+				variable,
+				BindValue{
+					valueType: MatchList,
+					value:     append(existing, prev.Match[oldlen:newlen]),
+				},
+			)
 		}
 		return err
 	}
