@@ -9,8 +9,6 @@ import (
 )
 
 // NoAction prevents Action combinators from producing Action thunks.
-//
-//go:fix inline
 func NoAction(m Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		t := prev.Thunks
@@ -26,8 +24,6 @@ func NoAction(m Matcher) Matcher {
 }
 
 // Join merges newly matched match strings into a string
-//
-//go:fix inline
 func Join(m Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 
@@ -43,8 +39,6 @@ func Join(m Matcher) Matcher {
 }
 
 // Ref resolves the referenced Matcher at runtime.
-//
-//go:fix inline
 func Ref(m *Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		if m == nil || *m == nil {
@@ -56,8 +50,6 @@ func Ref(m *Matcher) Matcher {
 }
 
 // Literal matches if the current input has literalString as a prefix.
-//
-//go:fix inline
 func Literal(literalString string) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if strings.HasPrefix(prev.Rest, literalString) {
@@ -73,8 +65,6 @@ func Literal(literalString string) Matcher {
 }
 
 // CharIn checks whether the first rune of the input lies between start and end (inclusive).
-//
-//go:fix inline
 func CharIn(start rune, end rune) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if len(prev.Rest) == 0 {
@@ -95,8 +85,6 @@ func CharIn(start rune, end rune) Matcher {
 }
 
 // Char checks whether the first rune of the input equals to one of the char in []char
-//
-//go:fix inline
 func Char(char ...rune) Matcher {
 	return func(prev *MatchResult) (err error) {
 		if len(prev.Rest) == 0 {
@@ -138,8 +126,6 @@ var AnyChar = CharIn(0, utf8.MaxRune)
 var EndOfInput = NegativeAssert(AnyChar)
 
 // Action executes the matcher, then invokes a callback on the resulting MatchResult.
-//
-//go:fix inline
 func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 	return func(prev *MatchResult) (err error) {
 		oldlen := len(prev.Match)
@@ -167,8 +153,6 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 }
 
 // RepeatRange applies the matcher repeatedly, requiring the number of matches to fall within the given bounds.
-//
-//go:fix inline
 func RepeatRange(matcher Matcher, min, max int) Matcher {
 	hasUpper := max != -1
 	hasLower := min != -1
@@ -202,8 +186,6 @@ func RepeatRange(matcher Matcher, min, max int) Matcher {
 
 // Repeat repeatedly applies the matcher until ErrNoMatch is returned.
 // If allowEmpty is false, at least one successful match is required.
-//
-//go:fix inline
 func Repeat(matcher Matcher, allowEmpty bool) Matcher {
 	if allowEmpty {
 		return RepeatRange(matcher, 0, -1)
@@ -213,8 +195,6 @@ func Repeat(matcher Matcher, allowEmpty bool) Matcher {
 }
 
 // SepBy creates a list like matcher with a `sep` been used as seperator
-//
-//go:fix inline
 func SepBy(matcher Matcher, sep Matcher, allowEmpty bool) Matcher {
 	if allowEmpty {
 		matcher = Optional(matcher)
@@ -233,8 +213,6 @@ func SepBy(matcher Matcher, sep Matcher, allowEmpty bool) Matcher {
 }
 
 // Optional attempts to apply the matcher; if it fails, the error is suppressed and no input is consumed.
-//
-//go:fix inline
 func Optional(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		err = matcher(prev)
@@ -248,8 +226,6 @@ func Optional(matcher Matcher) Matcher {
 }
 
 // Binds the matched string to a named variable.
-//
-//go:fix inline
 func Bind(variable string, matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		oldlen := len(prev.Match)
@@ -264,8 +240,6 @@ func Bind(variable string, matcher Matcher) Matcher {
 }
 
 // PositiveAssert succeeds only if the matcher succeeds and does not consume input.
-//
-//go:fix inline
 func PositiveAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		t := *prev
@@ -281,8 +255,6 @@ func PositiveAssert(matcher Matcher) Matcher {
 }
 
 // NegativeAssert succeeds only if the matcher fails. It does not consume input and returns an error if the matcher succeeds.
-//
-//go:fix inline
 func NegativeAssert(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		t := *prev
@@ -304,8 +276,6 @@ func NegativeAssert(matcher Matcher) Matcher {
 // Sequence applies matchers in order and concatenates their matches.
 // If any matcher produces a result with Pluck set to true, only plucked
 // results are collected and all previously matched results are discarded.
-//
-//go:fix inline
 func Sequence(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) error {
 		t := *prev
@@ -325,8 +295,6 @@ func Sequence(matchers ...Matcher) Matcher {
 }
 
 // Alternation tries each matcher in order and returns the first one that does not fail.
-//
-//go:fix inline
 func Alternation(matchers ...Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		for _, matcher := range matchers {
@@ -343,8 +311,6 @@ func Alternation(matchers ...Matcher) Matcher {
 }
 
 // Skip removes matched results of the matcher from Match
-//
-//go:fix inline
 func Skip(matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		oldlen := len(prev.Match)
@@ -360,8 +326,6 @@ func Skip(matcher Matcher) Matcher {
 }
 
 // Parse executes the matcher, processes thunks
-//
-//go:fix inline
 func Parse(matcher Matcher, input string) (*MatchResult, error) {
 	match := &MatchResult{
 		Rest: input,
