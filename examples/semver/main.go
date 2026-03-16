@@ -7,7 +7,7 @@ import (
 	. "jnsn.in/katti"
 )
 
-func main() {
+func ParseSemver() (*MatchResult, error) {
 	positiveDigit := CharIn('1', '9')
 	digit := CharIn('0', '9')
 	dot := Char('.')
@@ -108,6 +108,13 @@ func main() {
 		),
 	)
 
-	result, err := Parse(semver, "1.0.0-alpha+rr")
-	fmt.Printf("result:%#v\nerr: %#v\n", result, err)
+	return Parse(semver, "1.0.0-alpha+rr")
+}
+
+func main() {
+	if mr, err := ParseSemver(); err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(mr)
+	}
 }
