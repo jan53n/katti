@@ -11,7 +11,6 @@ func main() {
 	positiveDigit := CharIn('1', '9')
 	digit := CharIn('0', '9')
 	dot := Char('.')
-
 	skipdot := Skip(dot)
 
 	numericIdentifier := Alternation(
@@ -47,14 +46,16 @@ func main() {
 	)
 
 	preRelease := Sequence(
-		Bind("PR_HEAD", preReleaseIdentifier),
+		Bind("PR_HEAD", Join(preReleaseIdentifier)),
 		Bind("PR_TAIL",
-			Repeat(
-				Sequence(
-					skipdot,
-					preReleaseIdentifier,
+			Join(
+				Repeat(
+					Sequence(
+						skipdot,
+						preReleaseIdentifier,
+					),
+					true,
 				),
-				true,
 			),
 		),
 	)
@@ -78,15 +79,15 @@ func main() {
 	)
 
 	versionCore := Sequence(
-		Bind("MAJOR", numericIdentifier),
+		Bind("MAJOR", Join(numericIdentifier)),
 		dot,
-		Bind("MINOR", numericIdentifier),
+		Bind("MINOR", Join(numericIdentifier)),
 		dot,
-		Bind("PATCH", numericIdentifier),
+		Bind("PATCH", Join(numericIdentifier)),
 	)
 
 	semver := Sequence(
-		Bind("VERSION_CORE", versionCore),
+		Bind("VERSION_CORE", Join(versionCore)),
 		Bind("PRE",
 			Optional(
 				Sequence(
@@ -96,10 +97,12 @@ func main() {
 			),
 		),
 		Bind("BUILD",
-			Optional(
-				Sequence(
-					Skip(Char('+')),
-					build,
+			Join(
+				Optional(
+					Sequence(
+						Skip(Char('+')),
+						build,
+					),
 				),
 			),
 		),
