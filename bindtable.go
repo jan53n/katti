@@ -9,7 +9,7 @@ func (bm *BindTable) appendBindMap() {
 }
 
 func (bm *BindTable) popBindMap() {
-	bm.Collection = bm.Collection[:len(bm.Collection)-1]
+	bm.Collection = bm.Collection[len(bm.Collection):]
 }
 
 func (bm *BindTable) Set(k string, v []string) {
