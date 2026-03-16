@@ -1,35 +1,40 @@
 package katti
 
+import "strings"
+
 type BindTable struct {
-	Collection []map[string][][]string
+	Collection []map[string][]string
 }
 
 func (bm *BindTable) appendBindMap() {
-	bm.Collection = append(bm.Collection, map[string][][]string{})
+	bm.Collection = append(bm.Collection, map[string][]string{})
 }
 
 func (bm *BindTable) popBindMap() {
 	bm.Collection = bm.Collection[len(bm.Collection):]
 }
 
-func (bm *BindTable) Set(k string, v []string) {
+func (bm *BindTable) activeMap() map[string][]string {
 	activeLen := len(bm.Collection)
 
 	if activeLen == 0 {
-		bm.Collection = append(bm.Collection, map[string][][]string{})
+		bm.Collection = append(bm.Collection, map[string][]string{})
 		activeLen++
 	}
 
-	active := bm.Collection[activeLen-1]
-	active[k] = append(active[k], v)
+	return bm.Collection[activeLen-1]
 }
 
-func (bm *BindTable) Get(k string) [][]string {
-	for _, col := range bm.Collection {
-		if v, ok := col[k]; ok {
-			return v
-		}
-	}
+func (bm *BindTable) Set(k string, v []string) {
+	active := bm.activeMap()
+	active[k] = append(active[k], v...)
+}
 
-	return nil
+func (bm *BindTable) Get(k string) []string {
+	active := bm.activeMap()
+	return active[k]
+}
+
+func (bm *BindTable) GetString(k string) string {
+	return strings.Join(bm.Get(k), "")
 }
