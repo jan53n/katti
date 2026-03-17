@@ -110,12 +110,12 @@ func Leak(matcher Matcher, label string) Matcher {
 		err := matcher(prev)
 
 		fmt.Printf(
-			"Leak (%v)\n---\nprev: %#v \nerror: (%#v)\nmatcher: %#v\ntime: %v\n---\n",
+			"Leak (%v)\n---\nprev: %#v \nerror: (%#v)\nmatcher: %#v\ntime: %vns\n---\n",
 			label,
 			prev,
 			err,
 			matcher,
-			time.Since(t0),
+			time.Since(t0).Nanoseconds(),
 		)
 
 		return err
@@ -144,7 +144,6 @@ func Action(matcher Matcher, cb func(result *MatchResult) error) Matcher {
 
 		prev.Thunks = append(prev.Thunks, func() error {
 			r := cb(&snapshot)
-			snapshot.Bindings.popBindMap()
 			return r
 		})
 
@@ -225,7 +224,7 @@ func Optional(matcher Matcher) Matcher {
 	}
 }
 
-// Binds the matched string to a named variable.
+// Binds the matched string to a binding
 func Bind(variable string, matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		oldlen := len(prev.Match)
@@ -233,7 +232,38 @@ func Bind(variable string, matcher Matcher) Matcher {
 		newlen := len(prev.Match)
 
 		if err == nil {
-			prev.Bindings.Set(variable, prev.Match[oldlen:newlen])
+			prev.Bindings.Set(
+				variable,
+				BindValue{
+					valueType: Match,
+					value:     prev.Match[oldlen:newlen],
+				},
+			)
+		}
+		return err
+	}
+}
+
+// Binds the matched string to a list
+func BindList(variable string, matcher Matcher) Matcher {
+	return func(prev *MatchResult) (err error) {
+		oldlen := len(prev.Match)
+		err = matcher(prev)
+		newlen := len(prev.Match)
+
+		if err == nil {
+			existing := [][]string{}
+			if bv, ok := prev.Bindings.get(variable); ok && bv.valueType == MatchList {
+				existing = bv.value.([][]string)
+			}
+
+			prev.Bindings.Set(
+				variable,
+				BindValue{
+					valueType: MatchList,
+					value:     append(existing, prev.Match[oldlen:newlen]),
+				},
+			)
 		}
 		return err
 	}
