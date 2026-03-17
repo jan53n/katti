@@ -110,12 +110,12 @@ func Leak(matcher Matcher, label string) Matcher {
 		err := matcher(prev)
 
 		fmt.Printf(
-			"Leak (%v)\n---\nprev: %#v \nerror: (%#v)\nmatcher: %#v\ntime: %v\n---\n",
+			"Leak (%v)\n---\nprev: %#v \nerror: (%#v)\nmatcher: %#v\ntime: %vns\n---\n",
 			label,
 			prev,
 			err,
 			matcher,
-			time.Since(t0),
+			time.Since(t0).Nanoseconds(),
 		)
 
 		return err
@@ -224,7 +224,7 @@ func Optional(matcher Matcher) Matcher {
 	}
 }
 
-// Binds the matched string to a named variable.
+// Binds the matched string to a binding
 func Bind(variable string, matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		oldlen := len(prev.Match)
@@ -244,7 +244,7 @@ func Bind(variable string, matcher Matcher) Matcher {
 	}
 }
 
-// Binds the matched string to a named variable.
+// Binds the matched string to a list
 func BindList(variable string, matcher Matcher) Matcher {
 	return func(prev *MatchResult) (err error) {
 		oldlen := len(prev.Match)
