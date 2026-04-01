@@ -15,7 +15,7 @@ type ver struct {
 	build      string
 }
 
-func ParseSemver() (info ver, err error) {
+func ParseSemver(raw string) (info ver, err error) {
 	positiveDigit := CharIn('1', '9')
 	digit := CharIn('0', '9')
 	dot := Char('.')
@@ -128,7 +128,7 @@ func ParseSemver() (info ver, err error) {
 		),
 	)
 
-	if _, err := Parse(semver, "1.2.3-alpha+rr"); err != nil {
+	if _, err := Parse(semver, raw); err != nil {
 		return info, err
 	}
 
@@ -136,7 +136,7 @@ func ParseSemver() (info ver, err error) {
 }
 
 func main() {
-	if info, err := ParseSemver(); err != nil {
+	if info, err := ParseSemver("1.2.3-alpha+rr"); err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Printf("%#v\n", info)
